@@ -18,7 +18,7 @@ function getBlogPosts(): string[] {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://safetylayer.com';
+  const baseUrl = 'https://safetylayer.vercel.app';
   const blogPosts = getBlogPosts();
 
   const blogUrls = blogPosts.map((slug) => ({
@@ -32,13 +32,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: 'daily' as const,
       priority: 1,
     },
     {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
     ...blogUrls,
