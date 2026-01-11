@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CloneGuard } from "@/components/CloneGuard";
+import { PWAInstaller } from "@/components/PWAInstaller";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -114,6 +115,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="SafetyLayer" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -124,6 +132,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <CloneGuard />
+        <PWAInstaller />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
