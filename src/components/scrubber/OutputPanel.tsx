@@ -6,9 +6,9 @@
  * Displays the sanitized output with masked PII tokens
  * Shows statistics about what was detected
  * Implements Smart Copy: Automatically prepends AI safety instructions
+ * Mobile-optimized with Material 3 surface colors
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, FileCheck, BadgeCheck, Download, Copy, Check, Info, Sparkles } from 'lucide-react';
 import { useScrubberStore } from '@/store/useSecretStore';
@@ -170,113 +170,114 @@ export function OutputPanel() {
 
   return (
     <>
-      <Card className="h-full flex flex-col">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className={`h-5 w-5 ${isShowingRestored ? 'text-blue-500' : 'text-green-500'}`} />
-              {isShowingRestored ? 'Restored Output' : 'Safe Output'}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              {totalDetected > 0 && (
-                <Badge variant="secondary" className="gap-1">
-                  <BadgeCheck className="h-3 w-3 text-green-500" />
-                  {totalDetected} items detected
-                </Badge>
-              )}
-              {displayOutput && (
-                <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-blue-500/10"
-                        >
-                          <Info className="h-3 w-3 text-blue-500" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p className="text-xs">
-                          <span className="font-semibold">Smart Copy Active:</span> We attach a system instruction to ensure the AI preserves your tokens exactly as they are!
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 h-8 hover:bg-purple-500/10 hover:border-purple-500 transition-all"
-                    onClick={handleCopyButton}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="h-3 w-3 text-green-500" />
-                        <span className="hidden sm:inline">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" />
-                        <span className="hidden sm:inline">Copy</span>
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 h-8"
-                    onClick={handleDownload}
-                  >
-                    <Download className="h-3 w-3" />
-                    <span className="hidden sm:inline">Download</span>
-                  </Button>
-                </>
-              )}
-            </div>
+      <div className="h-full flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        {/* Panel Header */}
+        <div className={`flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 ${
+          isShowingRestored ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-green-50 dark:bg-green-900/20'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Shield className={`h-4 w-4 ${isShowingRestored ? 'text-blue-500' : 'text-green-500'}`} />
+            <span className="label-technical">{isShowingRestored ? 'Restored Output' : 'Safe Output'}</span>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1 p-6 pt-0 flex flex-col gap-4">
+          <div className="flex items-center gap-1.5">
+            {totalDetected > 0 && (
+              <Badge variant="secondary" className="gap-1 text-[10px] h-6">
+                <BadgeCheck className="h-3 w-3 text-green-500" />
+                {totalDetected}
+              </Badge>
+            )}
+            {displayOutput && (
+              <>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-blue-500/10"
+                      >
+                        <Info className="h-3.5 w-3.5 text-blue-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">
+                        <span className="font-semibold">Smart Copy:</span> System instruction attached to preserve tokens!
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-8 px-2 md:px-3 hover:bg-purple-500/10 hover:border-purple-500 touch-target"
+                  onClick={handleCopyButton}
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-8 px-2 md:px-3 touch-target"
+                  onClick={handleDownload}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline text-xs">Save</span>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Output Content */}
+        <div className="flex-1 p-3 md:p-4">
           <div 
-            className={`min-h-[400px] p-4 rounded-lg border bg-background/50 overflow-auto ${
-              isShowingRestored ? 'border-blue-500/20 bg-blue-500/5' : 'border-green-500/20'
+            className={`h-full min-h-[200px] md:min-h-[300px] p-3 md:p-4 rounded-lg border overflow-auto font-mono text-sm ${
+              isShowingRestored 
+                ? 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10' 
+                : 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10'
             }`}
             onCopy={handleManualCopy}
           >
-          {displayOutput ? (
-            <HighlightedOutput text={displayOutput} isRestored={isShowingRestored} />
-          ) : (
-            <p className="text-sm text-muted-foreground font-mono">
-              {isShowingRestored 
-                ? "Restored text with original PII values will appear here..."
-                : "Sanitized text will appear here...\n\nYou can copy this to share with AI assistants or paste it back to restore the original values."
-              }
-            </p>
+            {displayOutput ? (
+              <HighlightedOutput text={displayOutput} isRestored={isShowingRestored} />
+            ) : (
+              <p className="text-sm text-slate-400 dark:text-slate-500">
+                {isShowingRestored 
+                  ? "Restored text will appear here..."
+                  : "Sanitized text will appear here...\n\nCopy this to share with AI assistants."
+                }
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Status Messages */}
+        <div className="px-3 pb-3 md:px-4 md:pb-4 space-y-2">
+          {isShowingRestored && displayOutput && (
+            <div className="flex items-start gap-2 text-xs bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+              <FileCheck className="h-3.5 w-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <span className="text-blue-700 dark:text-blue-400">
+                Original PII values restored. This contains sensitive data.
+              </span>
+            </div>
+          )}
+          {totalDetected > 0 && !isShowingRestored && displayOutput && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+              <span className="text-slate-400 dark:text-slate-500 uppercase tracking-wide font-medium">Detected:</span>
+              {Object.entries(piiCounts).map(([type, count]) => (
+                <Badge key={type} variant="outline" className="font-normal text-[10px] h-5 px-1.5">
+                  {type}: {count}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
-        {isShowingRestored && displayOutput && (
-          <div className="flex items-start gap-2 text-xs bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-2">
-            <FileCheck className="h-3 w-3 text-blue-500 flex-shrink-0 mt-0.5" />
-            <span className="text-blue-700 dark:text-blue-400">
-              Original PII values have been restored. This output contains sensitive data.
-            </span>
-          </div>
-        )}
-        {totalDetected > 0 && !isShowingRestored && displayOutput && (
-          <div className="flex flex-wrap gap-2 text-xs">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <FileCheck className="h-3 w-3" />
-              <span>Detected:</span>
-            </div>
-            {Object.entries(piiCounts).map(([type, count]) => (
-              <Badge key={type} variant="outline" className="font-normal">
-                {type}: {count}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
 
     {/* Smart Copy First-Time Modal */}
     <Dialog open={showSmartCopyModal} onOpenChange={setShowSmartCopyModal}>

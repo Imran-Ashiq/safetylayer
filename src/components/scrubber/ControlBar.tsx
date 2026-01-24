@@ -125,106 +125,114 @@ export function ControlBar() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-gradient-to-r from-card to-card/50 rounded-lg border border-border/50 backdrop-blur-sm">
-      {/* Primary Actions */}
-      <Button
-        onClick={handleScrub}
-        disabled={isScrubbing || !rawInput.trim()}
-        className="gap-2 min-w-[140px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-500/20 transition-all hover:scale-105"
-      >
-        {isScrubbing ? (
-          <>
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            Scrubbing...
-          </>
-        ) : (
-          <>
-            <Shield className="h-4 w-4" />
-            Scrub PII
-          </>
-        )}
-      </Button>
+    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      {/* Primary Actions - Full width on mobile */}
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Button
+          onClick={handleScrub}
+          disabled={isScrubbing || !rawInput.trim()}
+          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-500/20 transition-all hover:scale-105 touch-target"
+        >
+          {isScrubbing ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span className="hidden sm:inline">Scrubbing...</span>
+            </>
+          ) : (
+            <>
+              <Shield className="h-4 w-4" />
+              Scrub PII
+            </>
+          )}
+        </Button>
 
-      <Button
-        onClick={handleRestore}
-        disabled={isRestoring || !canRestore}
-        variant="outline"
-        className="gap-2 min-w-[140px] hover:bg-blue-500/10 hover:border-blue-500 transition-all hover:scale-105"
-      >
-        {isRestoring ? (
-          <>
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            Restoring...
-          </>
-        ) : (
-          <>
-            <RefreshCw className="h-4 w-4" />
-            Restore
-          </>
-        )}
-      </Button>
+        <Button
+          onClick={handleRestore}
+          disabled={isRestoring || !canRestore}
+          variant="outline"
+          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] hover:bg-blue-500/10 hover:border-blue-500 transition-all hover:scale-105 touch-target"
+        >
+          {isRestoring ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span className="hidden sm:inline">Restoring...</span>
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4" />
+              Restore
+            </>
+          )}
+        </Button>
+      </div>
 
-      {/* Secondary Actions */}
-      <Button 
-        onClick={handleCopy} 
-        disabled={!sanitizedOutput} 
-        variant="outline" 
-        className="gap-2 hover:bg-purple-500/10 hover:border-purple-500 transition-all hover:scale-105"
-      >
-        <Copy className="h-4 w-4" />
-        Copy
-      </Button>
+      {/* Secondary Actions - Row on mobile */}
+      <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
+        <Button 
+          onClick={handleCopy} 
+          disabled={!sanitizedOutput} 
+          variant="outline" 
+          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 hover:bg-purple-500/10 hover:border-purple-500 transition-all hover:scale-105 touch-target"
+        >
+          <Copy className="h-4 w-4" />
+          <span className="hidden sm:inline">Copy</span>
+        </Button>
 
-      <Button 
-        onClick={handleClear} 
-        variant="outline" 
-        className="gap-2 hover:bg-red-500/10 hover:border-red-500 transition-all hover:scale-105"
-      >
-        <Trash2 className="h-4 w-4" />
-        Clear
-      </Button>
+        <Button 
+          onClick={handleClear} 
+          variant="outline" 
+          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 hover:bg-red-500/10 hover:border-red-500 transition-all hover:scale-105 touch-target"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Clear</span>
+        </Button>
 
-      {/* Settings Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Pattern Settings</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuCheckboxItem
-            checked={options.email}
-            onCheckedChange={(checked) => setOptions({ email: checked as boolean })}
-          >
-            Emails
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={options.creditCard}
-            onCheckedChange={(checked) => setOptions({ creditCard: checked as boolean })}
-          >
-            Credit Cards
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={options.phone}
-            onCheckedChange={(checked) => setOptions({ phone: checked as boolean })}
-          >
-            Phone Numbers
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={options.ssn}
-            onCheckedChange={(checked) => setOptions({ ssn: checked as boolean })}
-          >
-            SSN / IDs
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOptions(DEFAULT_OPTIONS)} className="justify-between">
-            Reset to Defaults
-            <Check className="h-4 w-4 ml-2" />
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        {/* Settings Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="h-11 w-11 sm:h-10 sm:w-10 p-0 touch-target">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="text-xs uppercase tracking-wide text-slate-500">Pattern Settings</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={options.email}
+              onCheckedChange={(checked) => setOptions({ email: checked as boolean })}
+              className="h-10"
+            >
+              Emails
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={options.creditCard}
+              onCheckedChange={(checked) => setOptions({ creditCard: checked as boolean })}
+              className="h-10"
+            >
+              Credit Cards
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={options.phone}
+              onCheckedChange={(checked) => setOptions({ phone: checked as boolean })}
+              className="h-10"
+            >
+              Phone Numbers
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={options.ssn}
+              onCheckedChange={(checked) => setOptions({ ssn: checked as boolean })}
+              className="h-10"
+            >
+              SSN / IDs
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setOptions(DEFAULT_OPTIONS)} className="justify-between h-10">
+              Reset to Defaults
+              <Check className="h-4 w-4 ml-2" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

@@ -120,3 +120,67 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Material 3 Surface Colors */
+:root {
+  --surface: #ffffff;
+  --surface-dim: #f5f5f5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f7f7f7;
+  --surface-container: #f3f4f6;
+  --surface-container-high: #e5e7eb;
+  --surface-container-highest: #d1d5db;
+  --trust-green: #22c55e;
+  --token-highlight: #ede9fe;
+}
+
+.dark {
+  --surface: #0f172a;
+  --surface-dim: #0c1322;
+  --surface-container-lowest: #020617;
+  --surface-container-low: #0f172a;
+  --surface-container: #1e293b;
+  --surface-container-high: #334155;
+  --surface-container-highest: #475569;
+  --token-highlight: #3730a3;
+}
+
+/* Mobile-optimized touch targets */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .surface-container {
+    background-color: var(--surface-container);
+  }
+  
+  .surface-container-high {
+    background-color: var(--surface-container-high);
+  }
+  
+  .surface-container-low {
+    background-color: var(--surface-container-low);
+  }
+}
+
+/* Monospace text for data display */
+.font-data {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+  font-feature-settings: 'liga' 0;
+}
+
+/* Enterprise-style labels */
+.label-technical {
+  @apply text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+}
+
+/* Safe area for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .h-safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom);
+  }
+}
