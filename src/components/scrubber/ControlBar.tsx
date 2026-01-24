@@ -16,11 +16,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
-import { Shield, RefreshCw, Copy, Trash2, Settings, Check } from 'lucide-react';
+import { Shield, RefreshCw, Copy, Trash2, Settings, Check, Keyboard } from 'lucide-react';
 import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DEFAULT_OPTIONS } from '@/lib/scrubber';
+import { ScrubIntensityBadge } from '@/components/ScrubIntensityToggle';
+import Link from 'next/link';
 
 export function ControlBar() {
   const { scrubText, restoreText, clearAll, sanitizedOutput, options, setOptions, rawInput, secrets } =
@@ -126,6 +128,11 @@ export function ControlBar() {
 
   return (
     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      {/* Intensity Badge */}
+      <div className="hidden sm:block">
+        <ScrubIntensityBadge />
+      </div>
+      
       {/* Primary Actions - Full width on mobile */}
       <div className="flex gap-2 w-full sm:w-auto">
         <Button
@@ -226,9 +233,15 @@ export function ControlBar() {
               SSN / IDs
             </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setOptions(DEFAULT_OPTIONS)} className="justify-between h-10">
+            <DropdownMenuItem onClick={() => setOptions(DEFAULT_OPTIONS)} className="h-10">
               Reset to Defaults
-              <Check className="h-4 w-4 ml-2" />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="h-10">
+              <Link href="/settings" className="flex items-center gap-2">
+                <Keyboard className="h-4 w-4" />
+                All Settings & Shortcuts
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

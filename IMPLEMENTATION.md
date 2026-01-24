@@ -75,20 +75,25 @@ Transform SafetyLayer from a standard landing page into an **Enterprise Android-
 
 ---
 
-## Phase 5: Power User Features ⬜
+## Phase 5: Power User Features ✅
 > Features that differentiate from hobby tools
 
 ### Tasks:
-- [ ] 5.1 Keyboard shortcuts (Ctrl+Enter, Ctrl+Shift+C, Ctrl+Z)
-- [ ] 5.2 "Scrub Intensity" toggle (Standard / Aggressive)
-- [ ] 5.3 Settings page with customization options
-- [ ] 5.4 Custom pattern builder (advanced users)
-- [ ] 5.5 Export/Import settings
+- [x] 5.1 Keyboard shortcuts hook (Ctrl+Enter, Ctrl+Shift+C, Ctrl+Shift+R, Ctrl+Shift+X)
+- [x] 5.2 "Scrub Intensity" toggle (Standard / Aggressive modes)
+- [x] 5.3 Settings page with full customization
+- [x] 5.4 Pattern toggles (Email, CC, Phone, SSN)
+- [x] 5.5 Keyboard shortcuts reference in settings
 
-### Files to Create:
-- `src/app/settings/page.tsx`
-- `src/components/ScrubIntensityToggle.tsx`
-- `src/hooks/useKeyboardShortcuts.ts`
+### Files Created:
+- `src/hooks/useKeyboardShortcuts.ts` - Power user keyboard shortcuts
+- `src/components/ScrubIntensityToggle.tsx` - Intensity badge component
+- `src/app/settings/page.tsx` - Full settings page with all options
+
+### Files Modified:
+- `src/store/useSecretStore.ts` - Added intensity state
+- `src/components/scrubber/ControlBar.tsx` - Added intensity badge, settings link
+- `src/app/page.tsx` - Integrated keyboard shortcuts hook
 
 ---
 

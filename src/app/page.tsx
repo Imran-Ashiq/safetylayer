@@ -42,53 +42,20 @@ import {
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { useScrubberStore } from '@/store/useSecretStore';
-import { useToast } from '@/hooks/use-toast';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export default function Home() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { scrubText, restoreText, rawInput, secrets } = useScrubberStore();
-  const { toast } = useToast();
-  const [showShortcuts, setShowShortcuts] = useState(false);
+  const { secrets } = useScrubberStore();
+
+  // Power user keyboard shortcuts
+  useKeyboardShortcuts();
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + Enter to scrub
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        if (rawInput.trim()) {
-          scrubText();
-          toast({
-            title: 'Text scrubbed',
-            description: 'PII has been sanitized',
-          });
-        }
-      }
-      // Ctrl/Cmd + Shift + R to restore
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
-        e.preventDefault();
-        restoreText();
-        toast({
-          title: 'Text restored',
-          description: 'Original data recovered',
-        });
-      }
-      // Show shortcuts help
-      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-        e.preventDefault();
-        setShowShortcuts(!showShortcuts);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [rawInput, scrubText, restoreText, toast, showShortcuts]);
 
   const scrollToFeatures = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
@@ -120,15 +87,17 @@ export default function Home() {
 
             {/* Header Actions */}
             <div className="flex items-center gap-2">
-              {/* Keyboard shortcuts toggle */}
+              {/* Settings/Keyboard shortcuts link */}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowShortcuts(!showShortcuts)}
                 className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                title="Keyboard shortcuts (Ctrl+/)"
+                title="Settings & Keyboard shortcuts"
+                asChild
               >
-                <Keyboard className="h-4 w-4" />
+                <Link href="/settings">
+                  <Keyboard className="h-4 w-4" />
+                </Link>
               </Button>
 
               {/* Theme Toggle */}
@@ -176,29 +145,14 @@ export default function Home() {
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Paste sensitive data → Scrub → Copy sanitized text → Use with ChatGPT, Claude, or any LLM
               </p>
+              {/* Keyboard shortcut hint */}
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-mono">Ctrl</kbd>
+                <span className="mx-0.5">+</span>
+                <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-mono">Enter</kbd>
+                <span className="ml-1">to scrub</span>
+              </p>
             </div>
-
-            {/* Keyboard Shortcuts Panel */}
-            {showShortcuts && (
-              <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
-                <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
-                  <div className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Ctrl</kbd>
-                    <span className="text-slate-400">+</span>
-                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Enter</kbd>
-                    <span className="text-slate-600 dark:text-slate-400 ml-1">Scrub</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Ctrl</kbd>
-                    <span className="text-slate-400">+</span>
-                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Shift</kbd>
-                    <span className="text-slate-400">+</span>
-                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">R</kbd>
-                    <span className="text-slate-600 dark:text-slate-400 ml-1">Restore</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Detection Badges */}
             {Object.keys(piiCounts).length > 0 && (

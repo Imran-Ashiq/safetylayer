@@ -14,6 +14,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { scrubPII, restorePII, SecretEntry, ScrubberOptions, DEFAULT_OPTIONS } from '@/lib/scrubber';
 
+/**
+ * Scrub intensity levels
+ * - standard: Only validated patterns (Luhn-checked cards, valid emails)
+ * - aggressive: All matches including partial/unvalidated patterns
+ */
+export type ScrubIntensity = 'standard' | 'aggressive';
+
 interface ScrubberState {
   // Text inputs and outputs
   rawInput: string;
@@ -26,11 +33,15 @@ interface ScrubberState {
 
   // Scrubbing options (PERSISTED)
   options: ScrubberOptions;
+  
+  // Scrub intensity (PERSISTED)
+  intensity: ScrubIntensity;
 
   // Actions
   setRawInput: (input: string) => void;
   setRestoreInput: (input: string) => void;
   setOptions: (options: Partial<ScrubberOptions>) => void;
+  setIntensity: (intensity: ScrubIntensity) => void;
   scrubText: () => void;
   restoreText: () => void;
   clearAll: () => void;
@@ -50,6 +61,7 @@ export const useScrubberStore = create<ScrubberState>()(
       restoredOutput: '',
       secrets: [],
       options: { ...DEFAULT_OPTIONS },
+      intensity: 'standard',
 
       // Actions
 
@@ -74,6 +86,13 @@ export const useScrubberStore = create<ScrubberState>()(
         set((state) => ({
           options: { ...state.options, ...newOptions },
         }));
+      },
+
+      /**
+       * Set scrub intensity level
+       */
+      setIntensity: (intensity: ScrubIntensity) => {
+        set({ intensity });
       },
 
       /**
@@ -131,9 +150,10 @@ export const useScrubberStore = create<ScrubberState>()(
     {
       name: 'safetylayer-secrets', // localStorage key
       partialize: (state) => ({
-        // Only persist secrets and options (not the actual text content)
+        // Only persist secrets, options, and intensity (not the actual text content)
         secrets: state.secrets,
         options: state.options,
+        intensity: state.intensity,
       }),
     }
   )
