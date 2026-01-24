@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { DEFAULT_OPTIONS } from '@/lib/scrubber';
 import { ScrubIntensityBadge } from '@/components/ScrubIntensityToggle';
+import { haptic } from '@/lib/haptics';
 import Link from 'next/link';
 
 export function ControlBar() {
@@ -43,14 +44,17 @@ export function ControlBar() {
         description: 'Please enter some text in the Raw Input panel.',
         variant: 'destructive',
       });
+      haptic('warning');
       return;
     }
 
     setIsScrubbing(true);
+    haptic('medium');
     // Simulate processing for better UX
     setTimeout(() => {
       scrubText();
       setIsScrubbing(false);
+      haptic('success');
       toast({
         title: 'Text scrubbed successfully',
         description: 'PII has been masked and replaced with tokens.',
@@ -65,6 +69,7 @@ export function ControlBar() {
         description: 'Please scrub some text first, or the secrets may have been cleared.',
         variant: 'destructive',
       });
+      haptic('warning');
       return;
     }
 
@@ -74,13 +79,16 @@ export function ControlBar() {
         description: 'Please scrub some text first, or paste text containing tokens into the Input panel.',
         variant: 'destructive',
       });
+      haptic('warning');
       return;
     }
 
     setIsRestoring(true);
+    haptic('medium');
     setTimeout(() => {
       restoreText();
       setIsRestoring(false);
+      haptic('success');
       
       const message = rawInputHasTokens 
         ? 'Tokens in Raw Input have been replaced with original values.'
@@ -100,11 +108,13 @@ export function ControlBar() {
         description: 'Please scrub some text first.',
         variant: 'destructive',
       });
+      haptic('warning');
       return;
     }
 
     try {
       await navigator.clipboard.writeText(sanitizedOutput);
+      haptic('success');
       toast({
         title: 'Copied to clipboard',
         description: 'Sanitized text has been copied to your clipboard.',

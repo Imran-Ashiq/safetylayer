@@ -133,9 +133,9 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="relative">
+      <main id="main-content" className="relative" role="main">
         {/* Hero Section - THE SCRUBBER */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8" aria-label="PII Scrubber Tool">
           <div className="max-w-7xl mx-auto">
             {/* Compact Title */}
             <div className="text-center mb-6">

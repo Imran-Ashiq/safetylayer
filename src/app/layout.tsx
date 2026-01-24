@@ -146,6 +146,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
       >
+        {/* Skip to content link for accessibility */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <CloneGuard />
         <PWAInstaller />
         <ThemeProvider
