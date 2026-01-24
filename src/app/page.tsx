@@ -434,8 +434,8 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Footer - Minimal */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+      {/* Footer - Minimal with mobile padding for bottom nav */}
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">

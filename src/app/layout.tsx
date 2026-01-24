@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CloneGuard } from "@/components/CloneGuard";
 import { PWAInstaller } from "@/components/PWAInstaller";
+import { BottomNav } from "@/components/BottomNav";
+import { FAB } from "@/components/FAB";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -147,6 +149,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <FAB />
+          <BottomNav />
           <Toaster />
         </ThemeProvider>
       </body>
