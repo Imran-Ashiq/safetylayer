@@ -1,9 +1,11 @@
 'use client';
 
 /**
- * SafetyLayer Landing Page
+ * SafetyLayer - Utility-First Landing Page
  * 
- * Enterprise-grade landing page with integrated PII sanitization demo
+ * The PII Scrubber is the hero - users see the tool immediately.
+ * Marketing content moved below the fold.
+ * Enterprise Android-style design with Material 3 aesthetics.
  */
 
 import Link from 'next/link';
@@ -12,6 +14,7 @@ import { OutputPanel } from '@/components/scrubber/OutputPanel';
 import { ControlBar } from '@/components/scrubber/ControlBar';
 import { ExampleTemplates } from '@/components/scrubber/ExampleTemplates';
 import { StatsDashboard } from '@/components/scrubber/StatsDashboard';
+import { TrustStrip } from '@/components/TrustStrip';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -22,17 +25,19 @@ import {
   Shield, 
   Lock, 
   Zap, 
-  Database,
   AlertTriangle,
-  CheckCircle2,
   Sparkles,
   Server,
   Eye,
-  ArrowRight,
   Code2,
   ShieldAlert,
   Wand2,
-  RefreshCw
+  RefreshCw,
+  ChevronDown,
+  Mail,
+  CreditCard,
+  Phone,
+  Hash
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
@@ -42,7 +47,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function Home() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { scrubText, restoreText, rawInput } = useScrubberStore();
+  const { scrubText, restoreText, rawInput, secrets } = useScrubberStore();
   const { toast } = useToast();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -60,8 +65,8 @@ export default function Home() {
         if (rawInput.trim()) {
           scrubText();
           toast({
-            title: 'Keyboard shortcut used',
-            description: 'Text scrubbed with Ctrl+Enter',
+            title: 'Text scrubbed',
+            description: 'PII has been sanitized',
           });
         }
       }
@@ -70,8 +75,8 @@ export default function Home() {
         e.preventDefault();
         restoreText();
         toast({
-          title: 'Keyboard shortcut used',
-          description: 'Text restored with Ctrl+Shift+R',
+          title: 'Text restored',
+          description: 'Original data recovered',
         });
       }
       // Show shortcuts help
@@ -85,45 +90,54 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [rawInput, scrubText, restoreText, toast, showShortcuts]);
 
-  const scrollToDemo = () => {
-    document.getElementById('live-demo')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToFeatures = () => {
+    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  return (
-    <div suppressHydrationWarning className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
-      {/* Mesh Gradient Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-[120px]" />
-      </div>
+  // Count detected PII by type
+  const piiCounts = secrets.reduce((acc, secret) => {
+    const type = secret.type.toLowerCase();
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-      {/* Header */}
-      <header className="border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+  return (
+    <div suppressHydrationWarning className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+      {/* Trust Strip - Always visible */}
+      <TrustStrip />
+
+      {/* Header - Compact for utility-first */}
+      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50">
-                <Shield className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                <Shield className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">SafetyLayer</h1>
-                <p className="text-xs text-slate-600 dark:text-slate-400 hidden sm:block">
-                  Open Source PII Firewall
-                </p>
-              </div>
+              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">SafetyLayer</span>
             </div>
 
             {/* Header Actions */}
             <div className="flex items-center gap-2">
+              {/* Keyboard shortcuts toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowShortcuts(!showShortcuts)}
+                className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                title="Keyboard shortcuts (Ctrl+/)"
+              >
+                <Keyboard className="h-4 w-4" />
+              </Button>
+
               {/* Theme Toggle */}
               {mounted && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-9 w-9 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10"
+                  className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 >
                   {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
@@ -131,19 +145,17 @@ export default function Home() {
 
               {/* GitHub Link */}
               <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-white"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 asChild
               >
                 <a
-                  href="https://github.com/Imran-Ashiq"
+                  href="https://github.com/Imran-Ashiq/safetylayer"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-9"
                 >
                   <Github className="h-4 w-4" />
-                  <span className="hidden sm:inline">GitHub</span>
                 </a>
               </Button>
             </div>
@@ -153,477 +165,306 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="relative">
-        {/* Hero Section */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-          <div className="max-w-6xl mx-auto">
-            {/* Headline */}
-            <div className="text-center mb-12">
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.1] text-slate-900 dark:text-white">
-                Use AI Without
-                <br />
-                <span className="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                  the Risk
-                </span>
-              </h1>
-              <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto mb-8 leading-relaxed">
-                The open-source firewall for your data. Sanitize sensitive PII (Emails, CCs, SSNs) in your browser{' '}
-                <span className="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-600 bg-clip-text text-transparent">before</span> sending context to ChatGPT or Claude.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                <Button
-                  size="lg"
-                  onClick={scrollToDemo}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg shadow-blue-500/50 hover:shadow-xl hover:shadow-blue-500/60 transition-all duration-300 hover:scale-105"
-                >
-                  Start Scrubbing
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white px-8 py-6 text-lg rounded-xl backdrop-blur-sm"
-                  asChild
-                >
-                  <a href="https://github.com/yourusername/safetylayer" target="_blank" rel="noopener noreferrer">
-                    <Github className="mr-2 h-5 w-5" />
-                    View on GitHub
-                  </a>
-                </Button>
-              </div>
-            </div>
-
-            {/* Visual Split-Screen Demo */}
-            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-              {/* Risky Prompt */}
-              <Card className="relative overflow-hidden border-2 border-red-500/30 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm p-6">
-                <div className="absolute top-4 right-4">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50">
-                    <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400" />
-                    <span className="text-xs font-semibold text-red-600 dark:text-red-400">RISKY</span>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Before</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Raw data with exposed PII</p>
-                </div>
-                <div className="bg-slate-100 dark:bg-slate-950/50 rounded-lg p-4 font-mono text-sm text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-800">
-                  <div className="space-y-2">
-                    <p>Contact: john@company.com</p>
-                    <p className="text-red-600 dark:text-red-400 font-semibold">Card: 4111-1111-1111-1111</p>
-                    <p className="text-red-600 dark:text-red-400 font-semibold">SSN: 123-45-6789</p>
-                    <p>Phone: (555) 123-4567</p>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Safe Prompt */}
-              <Card className="relative overflow-hidden border-2 border-green-500/30 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm p-6">
-                <div className="absolute top-4 right-4">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-semibold text-green-700 dark:text-green-400">SAFE</span>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">After</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Sanitized with tokens</p>
-                </div>
-                <div className="bg-slate-100 dark:bg-slate-950/50 rounded-lg p-4 font-mono text-sm text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-800">
-                  <div className="space-y-2">
-                    <p>Contact: <span className="text-blue-600 dark:text-blue-400 font-semibold">[EMAIL-1]</span></p>
-                    <p>Card: <span className="text-green-600 dark:text-green-400 font-semibold">[CC-1]</span></p>
-                    <p>SSN: <span className="text-cyan-600 dark:text-cyan-400 font-semibold">[SSN-1]</span></p>
-                    <p>Phone: <span className="text-purple-600 dark:text-purple-400 font-semibold">[PHONE-1]</span></p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Banner */}
-        <section className="border-y border-slate-200 dark:border-white/10 bg-slate-100/50 dark:bg-white/5 backdrop-blur-sm py-8">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm text-slate-600 dark:text-slate-400 mb-6">
-              Trusted by privacy-conscious developers
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Lock className="h-8 w-8 text-blue-500 dark:text-blue-400" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">100% Client-Side</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Code2 className="h-8 w-8 text-green-500 dark:text-green-400" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Open Source Code</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Server className="h-8 w-8 text-purple-500 dark:text-purple-400" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Zero Database</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Zap className="h-8 w-8 text-cyan-500 dark:text-cyan-400" />
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">Offline Capable</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Problem vs Solution Grid (Bento Style) */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-white">Why SafetyLayer?</h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400">
-                Stop the data leak before it happens
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Card 1 - The Fear */}
-              <Card className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 hover:border-red-500/50 transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-red-500/50">
-                  <AlertTriangle className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Don't Get Fired</h3>
-                <p className="text-slate-700 dark:text-slate-400 leading-relaxed">
-                  Uploading client data to public LLMs is a <span className="text-red-600 dark:text-red-400 font-semibold">GDPR nightmare</span>. We stop the leak at the source.
-                </p>
-              </Card>
-
-              {/* Card 2 - The Magic */}
-              <Card className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 hover:border-cyan-500/50 transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-cyan-500/50">
-                  <Sparkles className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Reversible Context</h3>
-                <p className="text-slate-700 dark:text-slate-400 leading-relaxed">
-                  Paste sanitized text into AI → Get answer → <span className="text-cyan-600 dark:text-cyan-400 font-semibold">Restore original details instantly</span>.
-                </p>
-              </Card>
-
-              {/* Card 3 - The Tech */}
-              <Card className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 hover:border-green-500/50 transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-green-500/50">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">Bank-Grade Validation</h3>
-                <p className="text-slate-700 dark:text-slate-400 leading-relaxed">
-                  We use <span className="text-green-600 dark:text-green-400 font-semibold">Luhn Algorithms</span>, not just Regex, to ensure we catch every valid credit card.
-                </p>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
-                The Privacy{' '}
-                <span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-                  Workflow
-                </span>
-              </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400">
-                Three simple steps to work with AI without leaking sensitive data
-              </p>
-            </div>
-
-            {/* 3-Step Process */}
-            <div className="grid md:grid-cols-3 gap-6 items-center">
-              {/* Step 1 */}
-              <Card className="relative bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 text-center group hover:border-blue-500/50 transition-all duration-300">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/50">
-                    1
-                  </div>
-                </div>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/50 group-hover:scale-110 transition-transform duration-300">
-                  <ShieldAlert className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Input</h3>
-                <p className="text-slate-700 dark:text-slate-400 text-sm leading-relaxed">
-                  Paste sensitive client data (Emails, CCs, SSNs) into the input panel.
-                </p>
-              </Card>
-
-              {/* Arrow */}
-              <div className="hidden md:flex justify-center -mx-6">
-                <ArrowRight className="h-8 w-8 text-slate-400 dark:text-slate-600" />
-              </div>
-
-              {/* Step 2 */}
-              <Card className="relative bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 text-center group hover:border-purple-500/50 transition-all duration-300">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-500/50">
-                    2
-                  </div>
-                </div>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform duration-300">
-                  <Wand2 className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Scrub</h3>
-                <p className="text-slate-700 dark:text-slate-400 text-sm leading-relaxed">
-                  We replace PII with reversible tokens locally in your browser.
-                </p>
-              </Card>
-
-              {/* Arrow */}
-              <div className="hidden md:flex justify-center -mx-6">
-                <ArrowRight className="h-8 w-8 text-slate-400 dark:text-slate-600" />
-              </div>
-
-              {/* Step 3 */}
-              <Card className="relative bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-white/10 p-8 text-center group hover:border-green-500/50 transition-all duration-300">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-green-500/50">
-                    3
-                  </div>
-                </div>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/50 group-hover:scale-110 transition-transform duration-300">
-                  <RefreshCw className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Restore</h3>
-                <p className="text-slate-700 dark:text-slate-400 text-sm leading-relaxed">
-                  Paste the AI response back to reveal original data instantly.
-                </p>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Live Demo Section */}
-        <section id="live-demo" className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 scroll-mt-20">
+        {/* Hero Section - THE SCRUBBER */}
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 mb-4">
-                <Sparkles className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">Interactive Demo</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
-                Try It{' '}
-                <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-                  Live
-                </span>
-              </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                Paste your sensitive data and watch it get sanitized in real-time. Everything runs locally in your browser.
+            {/* Compact Title */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 text-slate-900 dark:text-white">
+                Sanitize PII Before Sending to AI
+              </h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Paste sensitive data → Scrub → Copy sanitized text → Use with ChatGPT, Claude, or any LLM
               </p>
             </div>
 
-            {/* Demo Container with Glow Effect */}
-            <div className="relative">
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-blue-500/20 rounded-3xl blur-3xl -z-10" />
-              
-              {/* Mac-Style Browser Window */}
-              <div className="bg-white dark:bg-slate-900/90 backdrop-blur-xl border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-blue-900/20 overflow-hidden">
-                {/* Window Header Bar */}
-                <div className="bg-slate-100 dark:bg-slate-800/80 backdrop-blur-sm px-6 py-4 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700">
-                  {/* Traffic Lights */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-sm" />
-                    <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm" />
+            {/* Keyboard Shortcuts Panel */}
+            {showShortcuts && (
+              <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Ctrl</kbd>
+                    <span className="text-slate-400">+</span>
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Enter</kbd>
+                    <span className="text-slate-600 dark:text-slate-400 ml-1">Scrub</span>
                   </div>
-                  {/* Window Title */}
-                  <div className="flex-1 text-center">
-                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">SafetyLayer - Live Demo</span>
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Ctrl</kbd>
+                    <span className="text-slate-400">+</span>
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">Shift</kbd>
+                    <span className="text-slate-400">+</span>
+                    <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-mono">R</kbd>
+                    <span className="text-slate-600 dark:text-slate-400 ml-1">Restore</span>
                   </div>
-                  {/* Placeholder for symmetry */}
-                  <div className="w-16" />
                 </div>
+              </div>
+            )}
 
-                {/* Window Content */}
-                <div className="p-6 md:p-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/50 dark:to-slate-900/30">
-                {/* Keyboard Shortcuts Help */}
-                {showShortcuts && (
-                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl">
-                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-white">
-                      <Keyboard className="h-4 w-4" />
-                      Keyboard Shortcuts
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded text-xs font-mono text-slate-900 dark:text-white">Ctrl</kbd>
-                        <span className="text-slate-600 dark:text-slate-400">+</span>
-                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded text-xs font-mono text-slate-900 dark:text-white">Enter</kbd>
-                        <span className="text-slate-600 dark:text-slate-400">Scrub PII</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded text-xs font-mono text-slate-900 dark:text-white">Ctrl</kbd>
-                        <span className="text-slate-600 dark:text-slate-400">+</span>
-                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded text-xs font-mono text-slate-900 dark:text-white">Shift</kbd>
-                        <span className="text-slate-600 dark:text-slate-400">+</span>
-                        <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-white/20 rounded text-xs font-mono text-slate-900 dark:text-white">R</kbd>
-                        <span className="text-slate-600 dark:text-slate-400">Restore</span>
-                      </div>
-                    </div>
-                  </div>
+            {/* Detection Badges */}
+            {Object.keys(piiCounts).length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">Detected:</span>
+                {piiCounts.email && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <Mail className="h-3 w-3" />
+                    {piiCounts.email} Email{piiCounts.email > 1 ? 's' : ''}
+                  </span>
                 )}
+                {piiCounts.credit_card && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    <CreditCard className="h-3 w-3" />
+                    {piiCounts.credit_card} Card{piiCounts.credit_card > 1 ? 's' : ''}
+                  </span>
+                )}
+                {piiCounts.phone && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    <Phone className="h-3 w-3" />
+                    {piiCounts.phone} Phone{piiCounts.phone > 1 ? 's' : ''}
+                  </span>
+                )}
+                {piiCounts.ssn && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+                    <Hash className="h-3 w-3" />
+                    {piiCounts.ssn} SSN{piiCounts.ssn > 1 ? 's' : ''}
+                  </span>
+                )}
+                {piiCounts.ip && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                    <Server className="h-3 w-3" />
+                    {piiCounts.ip} IP{piiCounts.ip > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+            )}
 
-                {/* Shortcuts Toggle */}
-                <div className="mb-6 flex justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10"
-                    onClick={() => setShowShortcuts(!showShortcuts)}
-                  >
-                    <Keyboard className="h-4 w-4" />
-                    <span className="text-xs">Keyboard Shortcuts</span>
-                  </Button>
-                </div>
-
-                {/* Example Templates */}
-                <div className="mb-6">
+            {/* Scrubber Tool - THE HERO */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+              {/* Tool Header */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-2">
+                      PII Scrubber
+                    </span>
+                  </div>
                   <ExampleTemplates />
                 </div>
+              </div>
 
-                {/* Statistics Dashboard */}
-                <div className="mb-6">
+              {/* Tool Content */}
+              <div className="p-4 md:p-6">
+                {/* Statistics */}
+                <div className="mb-4">
                   <StatsDashboard />
                 </div>
-                
-                 {/* Control Bar */}
-                <div className="mb-6">
+
+                {/* Control Bar */}
+                <div className="mb-4">
                   <ControlBar />
                 </div>
 
-                {/* Split View Panels */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <InputPanel />
-                  <OutputPanel />
+                {/* Input/Output Panels */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                      Raw Input
+                    </label>
+                    <InputPanel />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                      Safe Output
+                    </label>
+                    <OutputPanel />
+                  </div>
                 </div>
 
-                {/* Legal Disclaimer */}
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-muted-foreground/60 italic">
-                    Security Notice: Processing happens locally in your browser. No data is sent to our servers. Use at your own risk.
+                {/* Security Notice */}
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <Eye className="h-3 w-3" />
+                  <span>All processing happens locally. Your data never leaves this browser.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Scroll indicator */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={scrollToFeatures}
+                className="inline-flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              >
+                <span className="text-xs">Learn more</span>
+                <ChevronDown className="h-4 w-4 animate-bounce" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section - Below the Fold */}
+        <section id="features" className="bg-white dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="max-w-6xl mx-auto">
+              {/* Trust Icons */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                <div className="flex flex-col items-center gap-2 text-center p-4">
+                  <Lock className="h-8 w-8 text-blue-500" />
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">100% Client-Side</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">No server uploads</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 text-center p-4">
+                  <Code2 className="h-8 w-8 text-green-500" />
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Open Source</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">AGPL-3.0 Licensed</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 text-center p-4">
+                  <Server className="h-8 w-8 text-purple-500" />
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Zero Database</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Nothing stored</span>
+                </div>
+                <div className="flex flex-col items-center gap-2 text-center p-4">
+                  <Zap className="h-8 w-8 text-cyan-500" />
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Offline Capable</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Works without internet</span>
+                </div>
+              </div>
+
+              {/* Why SafetyLayer */}
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 dark:text-white">Why SafetyLayer?</h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400">
+                  Stop the data leak before it happens
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-16">
+                {/* Card 1 */}
+                <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 hover:border-red-500/50 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Don't Get Fired</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Uploading client data to public LLMs is a GDPR nightmare. We stop the leak at the source.
                   </p>
-                </div>
-                </div>
+                </Card>
+
+                {/* Card 2 */}
+                <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 hover:border-cyan-500/50 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mb-4">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Reversible Context</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Paste sanitized text into AI → Get answer → Restore original details instantly.
+                  </p>
+                </Card>
+
+                {/* Card 3 */}
+                <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 hover:border-green-500/50 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4">
+                    <Shield className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Bank-Grade Validation</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    We use Luhn Algorithms, not just Regex, to ensure we catch every valid credit card.
+                  </p>
+                </Card>
+              </div>
+
+              {/* How It Works */}
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900 dark:text-white">
+                  The Privacy Workflow
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400">
+                  Three simple steps to work with AI without leaking sensitive data
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Step 1 */}
+                <Card className="relative bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 text-center">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
+                    1
+                  </div>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <ShieldAlert className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Input</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Paste sensitive data (Emails, CCs, SSNs) into the input panel.
+                  </p>
+                </Card>
+
+                {/* Step 2 */}
+                <Card className="relative bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 text-center">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                    2
+                  </div>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Wand2 className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Scrub</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    We replace PII with reversible tokens locally in your browser.
+                  </p>
+                </Card>
+
+                {/* Step 3 */}
+                <Card className="relative bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 text-center">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold text-xs">
+                    3
+                  </div>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <RefreshCw className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Restore</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Paste the AI response back to reveal original data instantly.
+                  </p>
+                </Card>
               </div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl mt-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-6xl mx-auto">
-            {/* Footer Content */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              {/* Brand */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="font-bold text-lg text-slate-900 dark:text-white">SafetyLayer</span>
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  Built for developers, by developers.
-                </p>
-                <div className="flex items-center gap-3">
-                  <a
-                    href="https://github.com/Imran-Ashiq"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                  >
-                    <Github className="h-5 w-5" />
-                  </a>
-                </div>
+      {/* Footer - Minimal */}
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-500" />
+                <span className="font-bold text-slate-900 dark:text-white">SafetyLayer</span>
               </div>
-
-              {/* Links */}
-              <div>
-                <h4 className="font-semibold mb-4 text-slate-900 dark:text-white">Product</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <button
-                      onClick={scrollToDemo}
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      Live Demo
-                    </button>
-                  </li>
-                  <li>
-                    <Link
-                      href="/blog"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      Blog
-                    </Link>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/Imran-Ashiq"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      Documentation
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/Imran-Ashiq"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      GitHub
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Legal & Support */}
-              <div>
-                <h4 className="font-semibold mb-4 text-slate-900 dark:text-white">Support</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <a
-                      href="https://buymeacoffee.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      Buy Me a Coffee
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/Imran-Ashiq"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                    >
-                      Report Issue
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                Open Source PII Firewall
+              </span>
             </div>
-
-            {/* Bottom Bar */}
-            <div className="pt-8 border-t border-slate-200 dark:border-white/10">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <Eye className="h-4 w-4 text-green-500" />
-                  <span>Your data never leaves your browser. Zero backend, zero risk.</span>
-                </div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  © 2025 SafetyLayer. MIT Licensed.
-                </div>
-              </div>
+            <div className="flex items-center gap-6 text-sm">
+              <Link
+                href="/blog"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                Blog
+              </Link>
+              <a
+                href="https://github.com/Imran-Ashiq/safetylayer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                GitHub
+              </a>
+              <span className="text-slate-400 dark:text-slate-500">
+                © {new Date().getFullYear()} AGPL-3.0
+              </span>
             </div>
           </div>
         </div>
