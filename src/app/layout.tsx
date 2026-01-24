@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,6 +7,12 @@ import { CloneGuard } from "@/components/CloneGuard";
 import { PWAInstaller } from "@/components/PWAInstaller";
 import { BottomNav } from "@/components/BottomNav";
 import { FAB } from "@/components/FAB";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -138,7 +144,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
       >
         <CloneGuard />
         <PWAInstaller />

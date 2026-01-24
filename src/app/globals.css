@@ -132,6 +132,26 @@
   --surface-container-highest: #d1d5db;
   --trust-green: #22c55e;
   --token-highlight: #ede9fe;
+  
+  /* Enterprise Token Colors - Soft pastel backgrounds */
+  --token-email-bg: #fef2f2;
+  --token-email-border: #fecaca;
+  --token-email-text: #dc2626;
+  --token-cc-bg: #fff7ed;
+  --token-cc-border: #fed7aa;
+  --token-cc-text: #ea580c;
+  --token-phone-bg: #eff6ff;
+  --token-phone-border: #bfdbfe;
+  --token-phone-text: #2563eb;
+  --token-id-bg: #f5f3ff;
+  --token-id-border: #ddd6fe;
+  --token-id-text: #7c3aed;
+  --token-name-bg: #ecfdf5;
+  --token-name-border: #a7f3d0;
+  --token-name-text: #059669;
+  --token-address-bg: #fdf4ff;
+  --token-address-border: #f5d0fe;
+  --token-address-text: #c026d3;
 }
 
 .dark {
@@ -143,6 +163,26 @@
   --surface-container-high: #334155;
   --surface-container-highest: #475569;
   --token-highlight: #3730a3;
+  
+  /* Enterprise Token Colors - Dark mode */
+  --token-email-bg: #450a0a;
+  --token-email-border: #7f1d1d;
+  --token-email-text: #fca5a5;
+  --token-cc-bg: #431407;
+  --token-cc-border: #7c2d12;
+  --token-cc-text: #fdba74;
+  --token-phone-bg: #172554;
+  --token-phone-border: #1e40af;
+  --token-phone-text: #93c5fd;
+  --token-id-bg: #2e1065;
+  --token-id-border: #5b21b6;
+  --token-id-text: #c4b5fd;
+  --token-name-bg: #022c22;
+  --token-name-border: #065f46;
+  --token-name-text: #6ee7b7;
+  --token-address-bg: #4a044e;
+  --token-address-border: #86198f;
+  --token-address-text: #f0abfc;
 }
 
 /* Mobile-optimized touch targets */
@@ -173,6 +213,48 @@
 /* Enterprise-style labels */
 .label-technical {
   @apply text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+}
+
+.label-enterprise {
+  @apply text-[11px] font-bold uppercase tracking-[0.1em] text-slate-600 dark:text-slate-300;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Enterprise Token Styling */
+.token-email {
+  background-color: var(--token-email-bg);
+  border-color: var(--token-email-border);
+  color: var(--token-email-text);
+}
+
+.token-cc {
+  background-color: var(--token-cc-bg);
+  border-color: var(--token-cc-border);
+  color: var(--token-cc-text);
+}
+
+.token-phone {
+  background-color: var(--token-phone-bg);
+  border-color: var(--token-phone-border);
+  color: var(--token-phone-text);
+}
+
+.token-id {
+  background-color: var(--token-id-bg);
+  border-color: var(--token-id-border);
+  color: var(--token-id-text);
+}
+
+.token-name {
+  background-color: var(--token-name-bg);
+  border-color: var(--token-name-border);
+  color: var(--token-name-text);
+}
+
+.token-address {
+  background-color: var(--token-address-bg);
+  border-color: var(--token-address-border);
+  color: var(--token-address-text);
 }
 
 /* Safe area for notched devices */

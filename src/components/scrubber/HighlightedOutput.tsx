@@ -20,12 +20,14 @@ export function HighlightedOutput({ text, isRestored = false }: HighlightedOutpu
   const { toast } = useToast();
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
-  // Token color mapping
-  const tokenColors: Record<string, { bg: string; text: string; border: string }> = {
-    EMAIL: { bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-500/30' },
-    CC: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-500/30' },
-    PHONE: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-500/30' },
-    ID: { bg: 'bg-purple-500/10', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-500/30' },
+  // Token color mapping - Enterprise styling with CSS variables
+  const tokenColors: Record<string, string> = {
+    EMAIL: 'token-email',
+    CC: 'token-cc',
+    PHONE: 'token-phone',
+    ID: 'token-id',
+    NAME: 'token-name',
+    ADDRESS: 'token-address',
   };
 
   const handleCopyToken = async (token: string) => {
@@ -52,8 +54,8 @@ export function HighlightedOutput({ text, isRestored = false }: HighlightedOutpu
       return <span className="whitespace-pre-wrap">{text}</span>;
     }
 
-    // Regex to match tokens like [EMAIL_1], [CC_1], etc.
-    const tokenRegex = /\[(EMAIL|CC|PHONE|ID)_\d+\]/g;
+    // Regex to match tokens like [EMAIL_1], [CC_1], [NAME_1], [ADDRESS_1], etc.
+    const tokenRegex = /\[(EMAIL|CC|PHONE|ID|NAME|ADDRESS)_\d+\]/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
@@ -61,7 +63,7 @@ export function HighlightedOutput({ text, isRestored = false }: HighlightedOutpu
     while ((match = tokenRegex.exec(text)) !== null) {
       const token = match[0];
       const tokenType = match[1];
-      const colors = tokenColors[tokenType] || tokenColors.EMAIL;
+      const tokenClass = tokenColors[tokenType] || 'token-id';
 
       // Add text before the token
       if (match.index > lastIndex) {
@@ -72,20 +74,23 @@ export function HighlightedOutput({ text, isRestored = false }: HighlightedOutpu
         );
       }
 
-      // Add the highlighted token
+      // Add the highlighted token with enterprise styling
       parts.push(
         <span
           key={`token-${match.index}`}
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold text-xs ${colors.bg} ${colors.text} ${colors.border} cursor-pointer hover:scale-105 transition-transform group relative`}
+          className={`${tokenClass} inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono font-medium text-xs cursor-pointer hover:scale-[1.02] hover:shadow-sm active:scale-100 transition-all duration-150 group select-none`}
           onClick={() => handleCopyToken(token)}
           title={`Click to copy ${token}`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleCopyToken(token)}
         >
-          {token}
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="tracking-tight">{token}</span>
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             {copiedToken === token ? (
-              <Check className="h-3 w-3" />
+              <Check className="h-3.5 w-3.5" />
             ) : (
-              <Copy className="h-3 w-3" />
+              <Copy className="h-3.5 w-3.5" />
             )}
           </span>
         </span>
@@ -107,7 +112,7 @@ export function HighlightedOutput({ text, isRestored = false }: HighlightedOutpu
   };
 
   return (
-    <div className="font-mono text-sm leading-relaxed">
+    <div className="font-data text-sm leading-relaxed tracking-wide">
       {renderHighlightedText()}
     </div>
   );
