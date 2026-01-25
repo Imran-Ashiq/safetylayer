@@ -22,7 +22,7 @@ export function ScrubIntensityToggle() {
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all',
           intensity === 'standard'
-            ? 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm'
+            ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
         )}
       >
@@ -61,7 +61,7 @@ export function ScrubIntensityBadge() {
       className={cn(
         'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all touch-target',
         intensity === 'standard'
-          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50'
       )}
       title={intensity === 'standard' 

@@ -78,7 +78,7 @@ export default function SettingsPage() {
         {/* Scrub Intensity */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Shield className="h-5 w-5 text-green-600" />
+            <Shield className="h-5 w-5 text-blue-600" />
             Scrub Intensity
           </h2>
           
@@ -87,18 +87,18 @@ export default function SettingsPage() {
               onClick={() => setIntensity('standard')}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                 intensity === 'standard'
-                  ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${intensity === 'standard' ? 'bg-green-100 dark:bg-green-900' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                  <Shield className={`h-5 w-5 ${intensity === 'standard' ? 'text-green-600' : 'text-slate-500'}`} />
+                <div className={`p-2 rounded-lg ${intensity === 'standard' ? 'bg-blue-100 dark:bg-blue-900' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                  <Shield className={`h-5 w-5 ${intensity === 'standard' ? 'text-blue-600' : 'text-slate-500'}`} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">Standard</span>
-                    {intensity === 'standard' && <Check className="h-4 w-4 text-green-600" />}
+                    {intensity === 'standard' && <Check className="h-4 w-4 text-blue-600" />}
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                     Only validated patterns. Credit cards are Luhn-checked, emails must be properly formatted.

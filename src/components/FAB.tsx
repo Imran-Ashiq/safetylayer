@@ -107,7 +107,7 @@ export function FAB() {
     scrub: {
       icon: <Wand2 className="h-6 w-6" />,
       label: 'Scrub',
-      gradient: 'from-blue-500 to-cyan-500',
+      gradient: 'from-blue-500 to-blue-600',
       shadow: 'shadow-blue-500/40',
     },
     copy: {

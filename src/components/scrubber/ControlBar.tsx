@@ -148,7 +148,7 @@ export function ControlBar() {
         <Button
           onClick={handleScrub}
           disabled={isScrubbing || !rawInput.trim()}
-          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg shadow-green-500/20 transition-all hover:scale-105 touch-target"
+          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/20 transition-all hover:scale-105 touch-target"
         >
           {isScrubbing ? (
             <>

@@ -261,7 +261,7 @@ export default function Home() {
                   <span className="text-xs text-slate-500 dark:text-slate-400">No server uploads</span>
                 </div>
                 <div className="flex flex-col items-center gap-2 text-center p-4">
-                  <Code2 className="h-8 w-8 text-green-500" />
+                  <Code2 className="h-8 w-8 text-slate-600 dark:text-slate-400" />
                   <span className="text-sm font-semibold text-slate-900 dark:text-white">Open Source</span>
                   <span className="text-xs text-slate-500 dark:text-slate-400">AGPL-3.0 Licensed</span>
                 </div>
@@ -309,8 +309,8 @@ export default function Home() {
                 </Card>
 
                 {/* Card 3 */}
-                <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 hover:border-green-500/50 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4">
+                <Card className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 p-6 hover:border-blue-500/50 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center mb-4">
                     <Shield className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Bank-Grade Validation</h3>

@@ -65,7 +65,7 @@ Clearance: Level 4`,
     name: 'Financial Data',
     icon: DollarSign,
     emoji: '💰',
-    gradient: 'from-green-500 to-emerald-500',
+    gradient: 'from-blue-500 to-indigo-500',
     content: `Q4 FINANCIAL SUMMARY
 
 Client: michael.chen@startup.io
