@@ -224,18 +224,8 @@ export default function Home() {
 
                 {/* Input/Output Panels */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                      Raw Input
-                    </label>
-                    <InputPanel />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                      Safe Output
-                    </label>
-                    <OutputPanel />
-                  </div>
+                  <InputPanel />
+                  <OutputPanel />
                 </div>
 
                 {/* Security Notice */}

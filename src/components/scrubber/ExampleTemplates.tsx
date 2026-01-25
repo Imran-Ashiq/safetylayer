@@ -4,13 +4,22 @@
  * ExampleTemplates Component
  * 
  * Provides quick example templates for users to try the scrubber
+ * Uses a dropdown/popover for compact mobile display
  */
 
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { FileText, Sparkles, MessageSquare, User, DollarSign, Heart } from 'lucide-react';
 import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
+import { haptic } from '@/lib/haptics';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const EXAMPLE_TEMPLATES = [
   {
@@ -101,6 +110,7 @@ export function ExampleTemplates() {
   const handleLoadExample = (template: typeof EXAMPLE_TEMPLATES[0]) => {
     clearAll(); // Clear any existing data
     setRawInput(template.content);
+    haptic('success');
     toast({
       title: '✅ Example loaded',
       description: `${template.name} template loaded. Click "Scrub PII" to sanitize.`,
@@ -108,51 +118,43 @@ export function ExampleTemplates() {
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border-blue-500/20 shadow-lg hover:shadow-xl transition-all duration-300">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg shadow-md">
-          <Sparkles className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">Try Example Templates</h3>
-          <p className="text-xs text-muted-foreground">Click to load sample data with PII</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2 h-8 text-xs bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 hover:border-blue-500/40"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+          <span className="hidden sm:inline">Examples</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="text-xs uppercase tracking-wide text-slate-500">
+          Load Sample Data
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         {EXAMPLE_TEMPLATES.map((template) => {
           const Icon = template.icon;
           return (
-            <Button
+            <DropdownMenuItem 
               key={template.id}
-              variant="outline"
-              size="lg"
-              className={`h-auto flex-col gap-3 py-5 hover:scale-105 transition-all duration-300 border-2 hover:border-transparent relative overflow-hidden group`}
               onClick={() => handleLoadExample(template)}
+              className="h-10 gap-3 cursor-pointer"
             >
-              {/* Gradient Background on Hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${template.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-              
-              {/* Icon */}
-              <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${template.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300`}>
-                <Icon className="w-6 h-6 text-white" />
+              <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${template.gradient} flex items-center justify-center`}>
+                <Icon className="w-3.5 h-3.5 text-white" />
               </div>
-              
-              {/* Text */}
-              <div className="relative text-center">
-                <span className="text-sm font-semibold block">{template.name}</span>
-              </div>
-            </Button>
+              <span className="font-medium">{template.name}</span>
+            </DropdownMenuItem>
           );
         })}
-      </div>
-      
-      <div className="mt-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-        <p className="text-xs text-muted-foreground flex items-center gap-2">
-          <FileText className="h-3.5 w-3.5 text-blue-500" />
-          <span>Each template contains realistic PII data for testing. Your data never leaves your browser.</span>
-        </p>
-      </div>
-    </Card>
+        <DropdownMenuSeparator />
+        <div className="px-2 py-2 text-[10px] text-slate-500 flex items-center gap-1.5">
+          <FileText className="h-3 w-3" />
+          <span>Data never leaves your browser</span>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
