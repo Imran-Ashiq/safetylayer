@@ -47,7 +47,7 @@ export function PWAInstaller() {
       }, 5000);
     }
 
-    // Register service worker with detailed logging
+    // Register service worker with detailed logging and update handling
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
@@ -56,10 +56,55 @@ export function PWAInstaller() {
             console.log('✅ SafetyLayer: Service Worker registered successfully');
             console.log('   Scope:', registration.scope);
             console.log('   Active:', registration.active);
+            
+            // Check for updates every 60 seconds
+            setInterval(() => {
+              registration.update();
+            }, 60 * 1000);
+            
+            // Handle waiting service worker (new version available)
+            if (registration.waiting) {
+              console.log('🔄 SafetyLayer: New version waiting, activating...');
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            
+            // Listen for new service worker installing
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              console.log('🔄 SafetyLayer: New version found, installing...');
+              
+              newWorker?.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('🔄 SafetyLayer: New version installed, will activate on refresh');
+                  // Automatically activate new SW
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
           })
           .catch((error) => {
             console.error('❌ SafetyLayer: Service Worker registration failed:', error);
           });
+      });
+      
+      // Listen for SW update messages to refresh page
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SW_UPDATED') {
+          console.log(`🔄 SafetyLayer: Updated to ${event.data.version}, refreshing...`);
+          // Small delay to ensure SW is fully activated
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }
+      });
+      
+      // Refresh page when new SW takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('🔄 SafetyLayer: New service worker activated');
+        // Only reload if this wasn't the initial load
+        if (navigator.serviceWorker.controller) {
+          window.location.reload();
+        }
       });
     } else {
       console.warn('⚠️ SafetyLayer: Service Workers not supported');

@@ -1,10 +1,16 @@
 // SafetyLayer Service Worker - Offline Support for Privacy
 // IMPORTANT: Increment version to bust cache on updates
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `safetylayer-${CACHE_VERSION}`;
-const OFFLINE_URL = '/';
 
-// Static assets to pre-cache (icons only - pages fetched fresh)
+// Pages to pre-cache for offline access
+const PAGES_TO_CACHE = [
+  '/',
+  '/settings',
+  '/blog',
+];
+
+// Static assets to pre-cache
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icon-192.png',
@@ -12,14 +18,24 @@ const STATIC_ASSETS = [
   '/SafetyLayer.png',
 ];
 
-// Install event - cache static assets and skip waiting immediately
+// All assets to pre-cache during install
+const ALL_PRECACHE = [...PAGES_TO_CACHE, ...STATIC_ASSETS];
+
+// Install event - cache all critical assets including pages
 self.addEventListener('install', (event) => {
   console.log(`SafetyLayer SW: Installing ${CACHE_VERSION}`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('SafetyLayer SW: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        console.log('SafetyLayer SW: Pre-caching pages and assets');
+        // Cache all assets - if any fail, continue with others
+        return Promise.allSettled(
+          ALL_PRECACHE.map(url => 
+            cache.add(url).catch(err => {
+              console.warn(`SafetyLayer SW: Failed to cache ${url}:`, err);
+            })
+          )
+        );
       })
       .then(() => {
         console.log('SafetyLayer SW: Skip waiting, activating immediately');
@@ -28,7 +44,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - delete ALL old caches and claim clients
+// Activate event - delete ALL old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
   console.log(`SafetyLayer SW: Activating ${CACHE_VERSION}`);
   event.waitUntil(
@@ -44,6 +60,14 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       console.log('SafetyLayer SW: Claiming all clients');
       return self.clients.claim();
+    }).then(() => {
+      // Force refresh all open tabs to get new content
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          console.log('SafetyLayer SW: Notifying client to refresh');
+          client.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION });
+        });
+      });
     })
   );
 });
@@ -62,27 +86,33 @@ self.addEventListener('fetch', (event) => {
   const isNavigationRequest = event.request.mode === 'navigate';
 
   if (isNavigationRequest) {
-    // NETWORK-FIRST for HTML pages - always get latest
+    // NETWORK-FIRST for HTML pages - always get latest, cache for offline
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Cache successful responses
+          // Always cache successful page responses for offline use
           if (response.ok) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
+              console.log(`SafetyLayer SW: Cached page ${url.pathname}`);
             });
           }
           return response;
         })
         .catch(() => {
-          // Network failed - serve cached version or offline page
+          console.log(`SafetyLayer SW: Offline, serving cached ${url.pathname}`);
+          // Network failed - serve cached version, fallback to homepage
           return caches.match(event.request)
-            .then((cached) => cached || caches.match(OFFLINE_URL));
+            .then((cached) => {
+              if (cached) return cached;
+              // If specific page not cached, serve homepage
+              return caches.match('/');
+            });
         })
     );
   } else if (isStaticAsset) {
-    // CACHE-FIRST for static assets (icons, fonts)
+    // CACHE-FIRST for static assets (icons, fonts, images)
     event.respondWith(
       caches.match(event.request)
         .then((cached) => {
@@ -99,10 +129,10 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else {
-    // NETWORK-FIRST for everything else (JS, CSS, API)
+    // STALE-WHILE-REVALIDATE for JS/CSS - serve cached immediately, update in background
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
+      caches.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request).then((response) => {
           if (response.ok) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -110,8 +140,11 @@ self.addEventListener('fetch', (event) => {
             });
           }
           return response;
-        })
-        .catch(() => caches.match(event.request))
+        }).catch(() => cached);
+
+        // Return cached immediately if available, otherwise wait for network
+        return cached || fetchPromise;
+      })
     );
   }
 });
