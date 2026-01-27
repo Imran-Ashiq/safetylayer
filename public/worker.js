@@ -1,6 +1,6 @@
 // SafetyLayer PWA Service Worker (Enhanced)
 // Strategy: Network-First for Navigation, Stale-While-Revalidate for Assets
-const CACHE_NAME = 'safetylayer-v6-offline-pro'; // Incremented version to force update
+const CACHE_NAME = 'safetylayer-v7-nuclear'; // Incremented version to force update
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
