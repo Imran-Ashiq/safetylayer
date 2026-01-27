@@ -1,52 +1,88 @@
-﻿// SafetyLayer Service Worker v7 - The "Ignore Vary" Edition
-// BUILD TIMESTAMP: 20260127-v7
-var BUILD_TIMESTAMP = '20260127-v7';
+﻿// SafetyLayer Service Worker v8 - The "Deep Clean" Edition
+// BUILD TIMESTAMP: 20260127-v8
+var BUILD_TIMESTAMP = '20260127-v8';
 var CACHE_NAME = 'sl-' + BUILD_TIMESTAMP;
 
-console.log('[SW] Loading v7: ' + CACHE_NAME);
+console.log('[SW] Loading v8: ' + CACHE_NAME);
 
-// Pages and assets to cache
-var PRECACHE_URLS = [
+// Core pages to cache immediately
+var PRECACHE_PAGES = [
   '/',
   '/settings',
-  '/blog',
+  '/blog'
+];
+
+// Static assets to cache immediately
+var PRECACHE_ASSETS = [
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/web-app-manifest-192x192.png',
+  '/web-app-manifest-512x512.png',
   '/SafetyLayer.png'
 ];
 
-// INSTALL: Cache essential resources
+// INSTALL: Cache Pages AND their Sub-Resources (JS/CSS)
 self.addEventListener('install', function(event) {
   console.log('[SW] Installing ' + CACHE_NAME);
   self.skipWaiting();
   
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      // 1. Cache static assets (e.g. icons) - Cache First nature
-      var staticPromises = PRECACHE_URLS.map(function(url) {
-        // Add cache buster to FORCE network fetch
-        // We use a specific request to ensure we get a clean response
-        var bustUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + BUILD_TIMESTAMP;
-        var request = new Request(bustUrl, { cache: 'reload' });
+    caches.open(CACHE_NAME).then(async function(cache) {
+      
+      // 1. Cache Static Assets
+      await Promise.allSettled(PRECACHE_ASSETS.map(function(url) {
+        var bustUrl = url + '?v=' + BUILD_TIMESTAMP;
+        return fetch(bustUrl, { cache: 'no-store' }).then(function(res) {
+          if (res.ok) return cache.put(url, res);
+        });
+      }));
 
-        return fetch(request)
-          .then(function(response) {
-            if (response.ok) {
-              // We must clone because we're consuming it
-              // We store it against the CLEAN url (no bust param)
-              return cache.put(url, response.clone());
-            }
-          })
-          .catch(function(e) {
-            console.warn('[SW] Failed to cache ' + url, e);
-          });
-      });
+      // 2. Cache Pages AND Parse for JS/CSS
+      for (var i = 0; i < PRECACHE_PAGES.length; i++) {
+        var pageUrl = PRECACHE_PAGES[i];
+        try {
+          // Fetch Page with cache busting
+          var pageRes = await fetch(pageUrl + '?v=' + BUILD_TIMESTAMP, { cache: 'no-store' });
+          if (pageRes.ok) {
+            // Cache the page
+            await cache.put(pageUrl, pageRes.clone());
+            console.log('[SW] Cached Page:', pageUrl);
 
-      return Promise.all(staticPromises);
+            // Parse HTML to find JS/CSS
+            var html = await pageRes.text();
+            var resources = extractResources(html);
+            console.log('[SW] Found ' + resources.length + ' resources for ' + pageUrl);
+            
+            // Cache resources
+            await Promise.allSettled(resources.map(function(resUrl) {
+               return fetch(resUrl).then(function(res) {
+                 if (res.ok) return cache.put(resUrl, res);
+               });
+            }));
+          }
+        } catch (e) {
+          console.warn('[SW] Failed to cache page ' + pageUrl, e);
+        }
+      }
     })
   );
 });
+
+// Helper to extract Next.js static resources
+function extractResources(html) {
+  var resources = [];
+  // Match script src
+  var scriptRegex = /src=["'](\/_next\/static\/[^"']+)["']/g;
+  var match;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    resources.push(match[1]);
+  }
+  // Match css href
+  var linkRegex = /href=["'](\/_next\/static\/[^"']+\.css[^"']*)["']/g;
+  while ((match = linkRegex.exec(html)) !== null) {
+    resources.push(match[1]);
+  }
+  return resources;
+}
 
 // ACTIVATE: Cleanup old caches
 self.addEventListener('activate', function(event) {
@@ -64,7 +100,7 @@ self.addEventListener('activate', function(event) {
     }).then(function() {
       return self.clients.claim();
     }).then(function() {
-      // Notify clients of the update
+      // Notify clients
       return self.clients.matchAll();
     }).then(function(clients) {
       clients.forEach(function(client) {
@@ -74,7 +110,7 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-// FETCH: Enhanced Network-First Strategy with ignoreVary
+// FETCH: Network First -> Cache Fallback (Ignore parameters)
 self.addEventListener('fetch', function(event) {
   var request = event.request;
   
@@ -83,93 +119,55 @@ self.addEventListener('fetch', function(event) {
   
   var url = new URL(request.url);
 
-  // 1. Navigation (HTML) -> Network First, Fallback to Cache
+  // 1. Navigation
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).then(function(response) {
         if (response.ok) {
-          // Update cache with fresh copy
           var clone = response.clone();
           caches.open(CACHE_NAME).then(function(cache) {
             cache.put(request, clone);
-            
-            // Also attempt to cache sub-resources (CSS/JS) found in HTML
-            clone.text().then(function(html) {
-              // Find all /_next/static/ URLs
-              var regex = /(\/_next\/static\/[^\s"'<>]+)/g;
-              var match;
-              var resources = [];
-              while ((match = regex.exec(html)) !== null) {
-                 resources.push(match[1]);
-              }
-              // Deduplicate
-              resources = resources.filter(function(item, pos) {
-                return resources.indexOf(item) === pos;
-              });
-              
-              if (resources.length > 0) {
-                 resources.forEach(function(resUrl) {
-                   // Clean up quotes/parens if regex caught them
-                   resUrl = resUrl.replace(/['"()]/g, '');
-                   fetch(resUrl).then(function(res) {
-                     if (res.ok) {
-                       cache.put(resUrl, res);
-                     }
-                   });
-                 });
-              }
-            });
           });
         }
         return response;
       }).catch(function() {
-        console.log('[SW] Offline navigate, checking cache for: ' + url.pathname);
-        // Offline: Serve cached page
-        // CRITICAL: ignoreVary: true is often needed for Next.js responses
-        return caches.match(request, { ignoreVary: true }).then(function(cached) {
+        console.log('[SW] Offline navigate: ' + url.pathname);
+        // Try exact match with ignoreSearch/ignoreVary
+        return caches.match(request, { ignoreSearch: true, ignoreVary: true }).then(function(cached) {
           if (cached) return cached;
-          
-          console.log('[SW] Page not in cache, trying fallback /');
-          return caches.match('/', { ignoreVary: true });
+          // Fallback to homepage
+          return caches.match('/', { ignoreSearch: true, ignoreVary: true });
         });
       })
     );
     return;
   }
 
-  // 2. Static Assets (JS/CSS/Images) -> Stale-While-Revalidate
-  if (url.pathname.startsWith('/_next/') || url.pathname.match(/\.(png|jpg|jpeg|svg|ico)$/)) {
-     event.respondWith(
-       caches.match(request, { ignoreVary: true }).then(function(cached) {
-         var networkFetch = fetch(request).then(function(response) {
-           if (response.ok) {
-             var clone = response.clone();
-             caches.open(CACHE_NAME).then(function(cache) {
-               cache.put(request, clone);
-             });
-           }
-           return response;
-         });
-         
-         // Return cached if available, else wait for network
-         return cached || networkFetch;
-       })
-     );
-     return;
+  // 2. Static Assets (JS/CSS)
+  if (url.pathname.startsWith('/_next/')) {
+    event.respondWith(
+      caches.match(request, { ignoreSearch: true, ignoreVary: true }).then(function(cached) {
+        if (cached) return cached;
+        return fetch(request).then(function(res) {
+          if (res.ok) {
+            var clone = res.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+              cache.put(request, clone);
+            });
+          }
+          return res;
+        });
+      })
+    );
+    return;
   }
-  
-  // 3. Default -> Network First
+
+  // 3. Default
   event.respondWith(
     fetch(request).then(function(response) {
-      if (response.ok) {
-        var clone = response.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(request, clone);
-        });
-      }
-      return response;
+       return response;
     }).catch(function() {
-      return caches.match(request, { ignoreVary: true });
+       return caches.match(request, { ignoreSearch: true, ignoreVary: true });
     })
   );
 });
