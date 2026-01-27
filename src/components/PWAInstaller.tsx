@@ -50,18 +50,30 @@ export function PWAInstaller() {
     if ('serviceWorker' in navigator) {
       const registerAndCleanup = async () => {
         try {
-          // 🛑 KILL SWITCH: Unregister all existing workers first (Fixes potentially stuck "Ghost" workers)
+          // Detect legacy/ghost registrations. Do NOT wipe caches on every load,
+          // otherwise the app can never build an offline shell.
           const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const reg of registrations) {
-            await reg.unregister();
-            console.log('🧹 Cleanup: Unregistered old SW', reg.scope);
-          }
+          const scriptUrls = registrations
+            .map((r) => r.active?.scriptURL || r.installing?.scriptURL || r.waiting?.scriptURL || '')
+            .filter(Boolean);
+          const hasLegacySw = scriptUrls.some((u) => u.includes('/sw.js'));
+          const hasNonWorker = scriptUrls.some((u) => !u.includes('/worker.js'));
+          const shouldNuke = hasLegacySw || hasNonWorker;
 
-          // 🛑 NUCLEAR CACHE CLEAR: Fixes "Green UI" persistence
-          if ('caches' in window) {
-            const keys = await caches.keys();
-            await Promise.all(keys.map((key) => caches.delete(key)));
-            console.log('🧹 Cleanup: All Caches Wiped');
+          if (shouldNuke) {
+            console.log('🧨 Cleanup: Legacy SW detected, nuking registrations + caches');
+            for (const reg of registrations) {
+              await reg.unregister();
+              console.log('🧹 Cleanup: Unregistered SW', reg.scope);
+            }
+
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((key) => caches.delete(key)));
+              console.log('🧹 Cleanup: All Caches Wiped');
+            }
+          } else {
+            console.log('✅ Cleanup: No legacy SW found; preserving caches for offline use');
           }
 
           // ✅ FRESH REGISTRATION (force-bust SW fetch)
@@ -106,12 +118,8 @@ export function PWAInstaller() {
         }
       };
 
-      // Avoid missing the 'load' event in PWAs by running immediately when possible.
-      if (document.readyState === 'complete') {
-        void registerAndCleanup();
-      } else {
-        window.addEventListener('load', () => void registerAndCleanup(), { once: true });
-      }
+      // Register ASAP; waiting for 'load' is too late for offline asset caching.
+      void registerAndCleanup();
       
       // Listen for SW update messages to refresh page
       navigator.serviceWorker.addEventListener('message', (event) => {
