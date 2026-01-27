@@ -11,6 +11,7 @@
  */
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { 
   ArrowLeft, 
   Shield, 
@@ -37,6 +38,40 @@ import { TrustStrip } from '@/components/TrustStrip';
 export default function SettingsPage() {
   const { options, setOptions, intensity, setIntensity, clearAll, secrets } = useScrubberStore();
   const { toast } = useToast();
+  const [swDebugText, setSwDebugText] = useState<string>('');
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const controller = navigator.serviceWorker?.controller?.scriptURL || 'none';
+        const regs = await navigator.serviceWorker?.getRegistrations?.();
+        const regScripts = regs?.map((r) => r.active?.scriptURL || r.installing?.scriptURL || r.waiting?.scriptURL || 'unknown') || [];
+        let swVersion = 'unavailable';
+        try {
+          const res = await fetch('/__sw_version', { cache: 'no-store' });
+          if (res.ok) {
+            const json = await res.json();
+            swVersion = `${json.script}@${json.version} (${json.cacheName})`;
+          }
+        } catch {
+          // ignore (offline or not controlled)
+        }
+
+        setSwDebugText(
+          `Controller: ${controller}\n` +
+          `Registrations: ${regScripts.length}\n` +
+          (regScripts.length ? `Reg scripts: ${regScripts.join(' | ')}\n` : '') +
+          `Worker endpoint: ${swVersion}`
+        );
+      } catch {
+        setSwDebugText('SW debug unavailable');
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      void run();
+    }
+  }, []);
 
   const handleClearSecrets = () => {
     clearAll();
@@ -314,6 +349,11 @@ export default function SettingsPage() {
         {/* Version Info */}
         <div className="text-center text-sm text-slate-500 py-4">
           <p>SafetyLayer v1.0.0 • SW: 20260128-v7-nuclear</p>
+          {swDebugText && (
+            <pre className="mt-2 text-left text-xs whitespace-pre-wrap break-words bg-slate-100/70 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg p-3">
+              {swDebugText}
+            </pre>
+          )}
           <p className="mt-1">
             <Link href="https://github.com/Imran-Ashiq/safetylayer" className="underline hover:text-slate-700">
               Open Source

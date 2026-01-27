@@ -1,6 +1,8 @@
 // SafetyLayer PWA Service Worker (Enhanced)
 // Strategy: Network-First for Navigation, Stale-While-Revalidate for Assets
 const CACHE_NAME = 'safetylayer-v7-nuclear'; // Incremented version to force update
+const SW_VERSION = 'v7-nuclear';
+const NAVIGATION_TIMEOUT_MS = 1500;
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
@@ -55,6 +57,12 @@ self.addEventListener('message', (event) => {
   }
 });
 
+function rejectAfter(ms) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('timeout')), ms);
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isNavigate = event.request.mode === 'navigate';
@@ -62,21 +70,43 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/_next/static/') || 
     url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico)$/);
 
+  // Debug endpoint to confirm which SW is controlling the client.
+  if (url.pathname === '/__sw_version') {
+    event.respondWith(
+      new Response(
+        JSON.stringify({
+          script: 'worker.js',
+          version: SW_VERSION,
+          cacheName: CACHE_NAME,
+          ts: Date.now(),
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        }
+      )
+    );
+    return;
+  }
+
   // 1. Navigation (HTML): Network First -> Cache (App Shell) -> Offline Page
   if (isNavigate) {
     event.respondWith(
-      fetch(event.request)
+      Promise.race([fetch(event.request), rejectAfter(NAVIGATION_TIMEOUT_MS)])
         .then((response) => {
           // If online and valid, update cache
-          if (response.status === 200) {
+          if (response && response.status === 200) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            // Cache by stable path key so reload/offline matches reliably.
+            caches.open(CACHE_NAME).then((cache) => cache.put(url.pathname, clone));
           }
           return response;
         })
         .catch(() => {
           console.log('[Worker] Offline navigation, trying cache...');
-          return caches.match(event.request)
+          return caches.match(url.pathname, { ignoreSearch: true, ignoreVary: true })
             .then((cachedRes) => {
               if (cachedRes) return cachedRes;
               
