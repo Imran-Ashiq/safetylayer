@@ -1,9 +1,9 @@
-﻿// SafetyLayer Service Worker v8 - The "Deep Clean" Edition
-// BUILD TIMESTAMP: 20260127-v8
-var BUILD_TIMESTAMP = '20260127-v8';
+﻿// SafetyLayer Service Worker v9 - Refactor Edition
+// BUILD TIMESTAMP: 20260127-v9
+var BUILD_TIMESTAMP = '20260127-v9';
 var CACHE_NAME = 'sl-' + BUILD_TIMESTAMP;
 
-console.log('[SW] Loading v8: ' + CACHE_NAME);
+console.log('[SW] Loading v9: ' + CACHE_NAME);
 
 // Core pages to cache immediately
 var PRECACHE_PAGES = [
