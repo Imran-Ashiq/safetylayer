@@ -37,6 +37,7 @@ export function ControlBar() {
   const hasSecrets = secrets && secrets.length > 0;
   const rawInputHasTokens = rawInput && /\[(EMAIL|CC|PHONE|ID)_\d+\]/.test(rawInput);
   const canRestore = hasSecrets && (sanitizedOutput || rawInputHasTokens);
+  const shouldPromoteRestore = !!rawInputHasTokens && hasSecrets;
 
   const handleScrub = () => {
     if (!rawInput.trim()) {
@@ -99,6 +100,14 @@ export function ControlBar() {
         title: 'Text restored successfully',
         description: message,
       });
+
+      // Bring the output panel into view (especially important on mobile).
+      setTimeout(() => {
+        document.getElementById('safetylayer-output-panel')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 50);
     }, 300);
   };
 
@@ -169,7 +178,11 @@ export function ControlBar() {
           onClick={handleRestore}
           disabled={isRestoring || !canRestore}
           variant="outline"
-          className="flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] hover:bg-blue-500/10 hover:border-blue-500 transition-all hover:scale-105 touch-target"
+          className={`flex-1 sm:flex-none gap-2 h-11 sm:h-10 sm:min-w-[140px] transition-all hover:scale-105 touch-target ${
+            shouldPromoteRestore
+              ? 'border-amber-400 bg-amber-50 hover:bg-amber-100 hover:border-amber-500 dark:bg-amber-950/20 dark:hover:bg-amber-950/30'
+              : 'hover:bg-blue-500/10 hover:border-blue-500'
+          }`}
         >
           {isRestoring ? (
             <>

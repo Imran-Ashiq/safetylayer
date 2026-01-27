@@ -19,27 +19,38 @@ import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
 import { buildSmartCopyText, notifySelectRawInput } from '@/lib/smartCopy';
 
-type FABState = 'scrub' | 'copy' | 'copied' | 'restore';
+type FABState = 'scrub' | 'copy' | 'copied' | 'restore' | 'copyRestored';
 
 export function FAB() {
-  const { scrubText, restoreText, rawInput, sanitizedOutput, restoredOutput } = useScrubberStore();
+  const { scrubText, restoreText, rawInput, sanitizedOutput, restoredOutput, secrets } = useScrubberStore();
   const { toast } = useToast();
   const [fabState, setFabState] = useState<FABState>('scrub');
   const [isPressed, setIsPressed] = useState(false);
 
   // Determine FAB state based on app state
   useEffect(() => {
-    if (restoredOutput) {
-      // If we have restored output, show restore option
-      setFabState('restore');
-    } else if (sanitizedOutput) {
-      // If we have sanitized output, show copy option
-      setFabState('copy');
-    } else {
-      // Default state
-      setFabState('scrub');
+    const hasSecrets = secrets && secrets.length > 0;
+    const rawHasTokens = rawInput && /\[(EMAIL|CC|PHONE|ID)_\d+\]/.test(rawInput);
+
+    // Restore flow: if user pasted LLM output containing tokens, promote Restore.
+    if (rawHasTokens && hasSecrets) {
+      setFabState(restoredOutput ? 'copyRestored' : 'restore');
+      return;
     }
-  }, [sanitizedOutput, restoredOutput]);
+
+    // If we have restored output, primary action becomes copying it.
+    if (restoredOutput) {
+      setFabState('copyRestored');
+      return;
+    }
+
+    if (sanitizedOutput) {
+      setFabState('copy');
+      return;
+    }
+
+    setFabState('scrub');
+  }, [sanitizedOutput, restoredOutput, rawInput, secrets]);
 
   const handleClick = async () => {
     setIsPressed(true);
@@ -87,6 +98,28 @@ export function FAB() {
         }
         break;
 
+      case 'copyRestored':
+        try {
+          if (!restoredOutput) return;
+          await navigator.clipboard.writeText(restoredOutput);
+          notifySelectRawInput();
+          setFabState('copied');
+          toast({
+            title: 'Copied!',
+            description: 'Restored text copied to clipboard',
+          });
+          if (navigator.vibrate) {
+            navigator.vibrate([50, 50, 50]);
+          }
+          setTimeout(() => setFabState('copyRestored'), 2000);
+        } catch {
+          toast({
+            title: 'Copy failed',
+            description: 'Please copy manually',
+          });
+        }
+        break;
+
       case 'copied':
         // Already copied, do nothing or show message
         break;
@@ -100,6 +133,13 @@ export function FAB() {
         if (navigator.vibrate) {
           navigator.vibrate(50);
         }
+        // After restoring, bring output into view and make next tap copy.
+        setTimeout(() => {
+          document.getElementById('safetylayer-output-panel')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }, 50);
         break;
     }
   };
@@ -129,6 +169,12 @@ export function FAB() {
       label: 'Restore',
       gradient: 'from-amber-500 to-orange-500',
       shadow: 'shadow-amber-500/40',
+    },
+    copyRestored: {
+      icon: <Copy className="h-6 w-6" />,
+      label: 'Copy',
+      gradient: 'from-emerald-500 to-teal-500',
+      shadow: 'shadow-emerald-500/40',
     },
   };
 
