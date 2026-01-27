@@ -51,9 +51,9 @@ export function PWAInstaller() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
-          .register('/sw.js')
+          .register('/worker.js')
           .then((registration) => {
-            console.log('✅ SafetyLayer: Service Worker registered successfully');
+            console.log('✅ SafetyLayer: Service Worker registered successfully (worker.js)');
             console.log('   Scope:', registration.scope);
             console.log('   Active:', registration.active);
             
