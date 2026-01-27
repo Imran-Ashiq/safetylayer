@@ -33,7 +33,6 @@ export function PWAInstaller() {
     if (standalone) {
       console.log('✅ SafetyLayer: Already installed as PWA');
       setIsInstalled(true);
-      return;
     }
 
     // For iOS devices, show install banner after delay
@@ -49,50 +48,51 @@ export function PWAInstaller() {
 
     // Register service worker with detailed logging and update handling
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
+      const registerAndCleanup = async () => {
         try {
           // 🛑 KILL SWITCH: Unregister all existing workers first (Fixes potentially stuck "Ghost" workers)
-          if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (const reg of registrations) {
-              await reg.unregister();
-              console.log('🧹 Cleanup: Unregistered old SW', reg.scope);
-            }
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+            console.log('🧹 Cleanup: Unregistered old SW', reg.scope);
           }
 
           // 🛑 NUCLEAR CACHE CLEAR: Fixes "Green UI" persistence
           if ('caches' in window) {
             const keys = await caches.keys();
-            await Promise.all(keys.map(key => caches.delete(key)));
+            await Promise.all(keys.map((key) => caches.delete(key)));
             console.log('🧹 Cleanup: All Caches Wiped');
           }
 
-          // ✅ FRESH REGISTRATION
+          // ✅ FRESH REGISTRATION (force-bust SW fetch)
           const registration = await navigator.serviceWorker.register(`/worker.js?v=${Date.now()}`, {
             scope: '/',
-            updateViaCache: 'none'
+            updateViaCache: 'none',
           });
 
           console.log('✅ SafetyLayer: Service Worker registered successfully (worker.js)');
           console.log('   Scope:', registration.scope);
           console.log('   Active:', registration.active);
-          
+
+          // Immediately check for an update
+          registration.update();
+
           // Check for updates every 60 seconds
           setInterval(() => {
             registration.update();
           }, 60 * 1000);
-          
+
           // Handle waiting service worker (new version available)
           if (registration.waiting) {
             console.log('🔄 SafetyLayer: New version waiting, activating...');
             registration.waiting.postMessage({ type: 'SKIP_WAITING' });
           }
-          
+
           // Listen for new service worker installing
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             console.log('🔄 SafetyLayer: New version found, installing...');
-            
+
             newWorker?.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 console.log('🔄 SafetyLayer: New version installed, will activate on refresh');
@@ -104,7 +104,14 @@ export function PWAInstaller() {
         } catch (error) {
           console.error('❌ SafetyLayer: Service Worker registration failed:', error);
         }
-      });
+      };
+
+      // Avoid missing the 'load' event in PWAs by running immediately when possible.
+      if (document.readyState === 'complete') {
+        void registerAndCleanup();
+      } else {
+        window.addEventListener('load', () => void registerAndCleanup(), { once: true });
+      }
       
       // Listen for SW update messages to refresh page
       navigator.serviceWorker.addEventListener('message', (event) => {
