@@ -1,11 +1,12 @@
 ﻿// SafetyLayer PWA Service Worker
-// Version: v3 (Manifest Start URL Fix)
+// Version: v4 (Offline Page Fallback)
 // Strategy: Network-First for Pages, Cache-First for hashed assets
-const CACHE_NAME = 'safetylayer-mobile-v3';
+const CACHE_NAME = 'safetylayer-mobile-v4';
 
 // 1. Assets that MUST be available immediately
 const PRECACHE_ASSETS = [
-  '/', // Only cache root, let the start_url fall back to this or fetch fresh
+  '/',
+  '/offline.html',
   '/manifest.json',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
@@ -13,7 +14,7 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v3:', CACHE_NAME);
+  console.log('[SW] Installing v4:', CACHE_NAME);
   self.skipWaiting();
 
   event.waitUntil(
@@ -23,6 +24,7 @@ self.addEventListener('install', (event) => {
         return fetch(url + '?v=' + Date.now(), { cache: 'no-store' })
           .then((response) => {
             if (response.ok) {
+              // Store utilizing the original URL key (without timestamp)
               return cache.put(url, response);
             }
           })
@@ -34,7 +36,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activated v3');
+  console.log('[SW] Activated v4');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -46,7 +48,6 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Claiming clients');
       return self.clients.claim();
     })
   );
@@ -58,7 +59,7 @@ self.addEventListener('fetch', (event) => {
   const isNextStatic = url.pathname.startsWith('/_next/static/');
   const isPublicAsset = PRECACHE_ASSETS.some(asset => url.pathname.endsWith(asset));
 
-  // A. Navigation: Network First -> Cache Fallback
+  // A. Navigation: Network First -> Cache Fallback -> Offline Page
   if (isNavigate) {
     event.respondWith(
       fetch(event.request)
@@ -70,11 +71,19 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
+          // Try to match the exact request
           return caches.match(event.request, { ignoreSearch: true, ignoreVary: true })
             .then((res) => {
                if (res) return res;
-               // Fallback to '/', even if they asked for '/?source=pwa_force_update'
+               
+               // Fallback 1: Try Root '/'
                return caches.match('/', { ignoreSearch: true, ignoreVary: true });
+            })
+            .then((res) => {
+              if (res) return res;
+              
+              // Fallback 2: Offline HTML (Last Resort)
+              return caches.match('/offline.html');
             });
         })
     );

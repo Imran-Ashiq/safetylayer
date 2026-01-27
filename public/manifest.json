@@ -2,7 +2,7 @@
   "name": "SafetyLayer - PII Scrubber for AI",
   "short_name": "SafetyLayer",
   "description": "Securely mask sensitive data before sending it to ChatGPT, Claude, or DeepSeek. 100% Offline & Open Source.",
-  "start_url": "/?source=pwa_force_update",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
