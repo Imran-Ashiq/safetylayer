@@ -1,11 +1,11 @@
 ﻿// SafetyLayer PWA Service Worker
-// Version: v2 (Mobile Fix)
+// Version: v3 (Manifest Start URL Fix)
 // Strategy: Network-First for Pages, Cache-First for hashed assets
-const CACHE_NAME = 'safetylayer-mobile-v2';
+const CACHE_NAME = 'safetylayer-mobile-v3';
 
 // 1. Assets that MUST be available immediately
 const PRECACHE_ASSETS = [
-  '/',
+  '/', // Only cache root, let the start_url fall back to this or fetch fresh
   '/manifest.json',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
@@ -13,7 +13,7 @@ const PRECACHE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v2:', CACHE_NAME);
+  console.log('[SW] Installing v3:', CACHE_NAME);
   self.skipWaiting();
 
   event.waitUntil(
@@ -34,7 +34,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activated v2');
+  console.log('[SW] Activated v3');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -71,7 +71,11 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(event.request, { ignoreSearch: true, ignoreVary: true })
-            .then((res) => res || caches.match('/', { ignoreSearch: true, ignoreVary: true }));
+            .then((res) => {
+               if (res) return res;
+               // Fallback to '/', even if they asked for '/?source=pwa_force_update'
+               return caches.match('/', { ignoreSearch: true, ignoreVary: true });
+            });
         })
     );
     return;
