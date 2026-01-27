@@ -67,7 +67,7 @@ export default function SettingsPage() {
       
       // Force reload from server
       setTimeout(() => {
-        window.location.href = window.location.href + '?cacheBust=' + Date.now();
+        window.location.reload();
       }, 500);
     } catch (error) {
       toast({
@@ -313,7 +313,7 @@ export default function SettingsPage() {
 
         {/* Version Info */}
         <div className="text-center text-sm text-slate-500 py-4">
-          <p>SafetyLayer v1.0.0 • SW: 20260127-v5</p>
+          <p>SafetyLayer v1.0.0 • SW: 20260128-v7-nuclear</p>
           <p className="mt-1">
             <Link href="https://github.com/Imran-Ashiq/safetylayer" className="underline hover:text-slate-700">
               Open Source
