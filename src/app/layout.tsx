@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CloneGuard } from "@/components/CloneGuard";
-// import { PWAInstaller } from "@/components/PWAInstaller";
+import { PWAInstaller } from "@/components/PWAInstaller";
 import { BottomNav } from "@/components/BottomNav";
 import { FAB } from "@/components/FAB";
 
@@ -151,7 +151,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <CloneGuard />
-        {/* <PWAInstaller /> */}
+        <PWAInstaller />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
