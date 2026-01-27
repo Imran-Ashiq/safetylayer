@@ -1,35 +1,32 @@
 ﻿// SafetyLayer PWA Service Worker
-// Version: v1 (Fresh Start)
+// Version: v2 (Mobile Fix)
 // Strategy: Network-First for Pages, Cache-First for hashed assets
-const CACHE_NAME = 'safetylayer-v1';
+const CACHE_NAME = 'safetylayer-mobile-v2';
 
-// 1. Assets that MUST be available immediately for the app to look "installed"
+// 1. Assets that MUST be available immediately
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
   '/SafetyLayer.png',
-  // We can add specific fonts or global CSS here if we extracted them, 
-  // but Next.js usage makes that dynamic. '/' covers the critical HTML.
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing New Version:', CACHE_NAME);
-  self.skipWaiting(); // Take over immediately
+  console.log('[SW] Installing v2:', CACHE_NAME);
+  self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Robust install: Use 'no-cache' to ensure we get fresh versions from server during install
+      // Force fresh fetch for all precached assets
       const cachePromises = PRECACHE_ASSETS.map((url) => {
-        return fetch(url, { cache: 'no-cache' })
+        return fetch(url + '?v=' + Date.now(), { cache: 'no-store' })
           .then((response) => {
             if (response.ok) {
               return cache.put(url, response);
             }
-            console.warn('[SW] Failed to cache during install:', url);
           })
-          .catch((err) => console.warn('[SW] Error caching during install:', url, err));
+          .catch((err) => console.warn('[SW] Cache fail:', url, err));
       });
       return Promise.all(cachePromises);
     })
@@ -37,7 +34,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activated:', CACHE_NAME);
+  console.log('[SW] Activated v2');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -48,7 +45,10 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('[SW] Claiming clients');
+      return self.clients.claim();
+    })
   );
 });
 
@@ -58,12 +58,11 @@ self.addEventListener('fetch', (event) => {
   const isNextStatic = url.pathname.startsWith('/_next/static/');
   const isPublicAsset = PRECACHE_ASSETS.some(asset => url.pathname.endsWith(asset));
 
-  // A. Navigation (Pages): Network First -> Cache Fallback -> Offline Page
+  // A. Navigation: Network First -> Cache Fallback
   if (isNavigate) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If valid network response, clone and cache it
           if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
@@ -71,57 +70,44 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          console.log('[SW] Offline Navigation, trying cache:', url.pathname);
-          // Try to find the page in cache
           return caches.match(event.request, { ignoreSearch: true, ignoreVary: true })
-            .then((response) => {
-              if (response) return response;
-              // Fallback to root '/' if specific page not cached
-              return caches.match('/', { ignoreSearch: true, ignoreVary: true });
-            });
+            .then((res) => res || caches.match('/', { ignoreSearch: true, ignoreVary: true }));
         })
     );
     return;
   }
 
-  // B. Next.js Static Assets (Hashed): Cache First -> Network
-  // These files have hashes in filenames, so they never change. We can cache aggressively.
+  // B. Next.js Static: Cache First
   if (isNextStatic) {
     event.respondWith(
       caches.match(event.request, { ignoreSearch: true, ignoreVary: true })
-        .then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          return fetch(event.request).then((networkResponse) => {
-            if (networkResponse.ok) {
-              const clone = networkResponse.clone();
+        .then((cached) => {
+          return cached || fetch(event.request).then((res) => {
+            if (res.ok) {
+              const clone = res.clone();
               caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
             }
-            return networkResponse;
+            return res;
           });
         })
     );
     return;
   }
 
-  // C. Public Assets (Images, Manifest, etc.): Stale-While-Revalidate
-  // Return cache immediately, but update in background.
-  if (isPublicAsset || url.pathname.match(/\.(png|jpg|jpeg|svg|json|ico)$/)) {
+  // C. Public Assets: Stale-While-Revalidate
+  if (isPublicAsset) {
     event.respondWith(
       caches.match(event.request, { ignoreSearch: true, ignoreVary: true })
-        .then((cachedResponse) => {
-          const fetchPromise = fetch(event.request).then((networkResponse) => {
-             if (networkResponse.ok) {
-               const clone = networkResponse.clone();
-               caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        .then((cached) => {
+          const fetchPromise = fetch(event.request).then((res) => {
+             if (res.ok) {
+               caches.open(CACHE_NAME).then((cache) => cache.put(event.request, res.clone()));
              }
-             return networkResponse;
+             return res;
           });
-          return cachedResponse || fetchPromise;
+          return cached || fetchPromise;
         })
     );
     return;
   }
-
-  // D. Default: Just fetch (API routes etc)
-  return; 
 });
