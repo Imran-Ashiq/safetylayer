@@ -1,9 +1,9 @@
-﻿// SafetyLayer Service Worker v6 - The "Force Update" Edition
-// BUILD TIMESTAMP: 20260127-v6
-var BUILD_TIMESTAMP = '20260127-v6';
+﻿// SafetyLayer Service Worker v7 - The "Ignore Vary" Edition
+// BUILD TIMESTAMP: 20260127-v7
+var BUILD_TIMESTAMP = '20260127-v7';
 var CACHE_NAME = 'sl-' + BUILD_TIMESTAMP;
 
-console.log('[SW] Loading v6: ' + CACHE_NAME);
+console.log('[SW] Loading v7: ' + CACHE_NAME);
 
 // Pages and assets to cache
 var PRECACHE_URLS = [
@@ -26,12 +26,15 @@ self.addEventListener('install', function(event) {
       // 1. Cache static assets (e.g. icons) - Cache First nature
       var staticPromises = PRECACHE_URLS.map(function(url) {
         // Add cache buster to FORCE network fetch
+        // We use a specific request to ensure we get a clean response
         var bustUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + BUILD_TIMESTAMP;
-        
-        return fetch(bustUrl, { cache: 'no-store' })
+        var request = new Request(bustUrl, { cache: 'reload' });
+
+        return fetch(request)
           .then(function(response) {
             if (response.ok) {
-              // Retrieve clean URL for storage
+              // We must clone because we're consuming it
+              // We store it against the CLEAN url (no bust param)
               return cache.put(url, response.clone());
             }
           })
@@ -71,7 +74,7 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-// FETCH: Enhanced Network-First Strategy
+// FETCH: Enhanced Network-First Strategy with ignoreVary
 self.addEventListener('fetch', function(event) {
   var request = event.request;
   
@@ -91,7 +94,6 @@ self.addEventListener('fetch', function(event) {
             cache.put(request, clone);
             
             // Also attempt to cache sub-resources (CSS/JS) found in HTML
-            // This is "best effort" parsing
             clone.text().then(function(html) {
               // Find all /_next/static/ URLs
               var regex = /(\/_next\/static\/[^\s"'<>]+)/g;
@@ -106,8 +108,9 @@ self.addEventListener('fetch', function(event) {
               });
               
               if (resources.length > 0) {
-                 // Fetch and cache them
                  resources.forEach(function(resUrl) {
+                   // Clean up quotes/parens if regex caught them
+                   resUrl = resUrl.replace(/['"()]/g, '');
                    fetch(resUrl).then(function(res) {
                      if (res.ok) {
                        cache.put(resUrl, res);
@@ -120,9 +123,14 @@ self.addEventListener('fetch', function(event) {
         }
         return response;
       }).catch(function() {
+        console.log('[SW] Offline navigate, checking cache for: ' + url.pathname);
         // Offline: Serve cached page
-        return caches.match(request).then(function(cached) {
-          return cached || caches.match('/');
+        // CRITICAL: ignoreVary: true is often needed for Next.js responses
+        return caches.match(request, { ignoreVary: true }).then(function(cached) {
+          if (cached) return cached;
+          
+          console.log('[SW] Page not in cache, trying fallback /');
+          return caches.match('/', { ignoreVary: true });
         });
       })
     );
@@ -130,10 +138,9 @@ self.addEventListener('fetch', function(event) {
   }
 
   // 2. Static Assets (JS/CSS/Images) -> Stale-While-Revalidate
-  // This ensures fast load (from cache) but updates in background
   if (url.pathname.startsWith('/_next/') || url.pathname.match(/\.(png|jpg|jpeg|svg|ico)$/)) {
      event.respondWith(
-       caches.match(request).then(function(cached) {
+       caches.match(request, { ignoreVary: true }).then(function(cached) {
          var networkFetch = fetch(request).then(function(response) {
            if (response.ok) {
              var clone = response.clone();
@@ -162,7 +169,7 @@ self.addEventListener('fetch', function(event) {
       }
       return response;
     }).catch(function() {
-      return caches.match(request);
+      return caches.match(request, { ignoreVary: true });
     })
   );
 });
