@@ -12,12 +12,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { Lock, FileText, Unlock } from 'lucide-react';
 import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useRef } from 'react';
 
 const MAX_CHARACTERS = 100000;
 
 export function InputPanel() {
   const { rawInput, setRawInput, secrets } = useScrubberStore();
   const { toast } = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    const handler = () => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.select();
+    };
+
+    window.addEventListener('safetylayer:select-raw-input', handler as EventListener);
+    return () => window.removeEventListener('safetylayer:select-raw-input', handler as EventListener);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -57,6 +71,7 @@ export function InputPanel() {
       {/* Textarea */}
       <div className="flex-1 p-3 md:p-4">
         <Textarea
+          ref={textareaRef}
           placeholder={hasPersistedSecrets
             ? "Paste text containing tokens (e.g., [EMAIL_1]) here to reveal original data...\n\nOr paste new sensitive data to scrub."
             : "Paste your sensitive data here...\n\nExample:\nContact John at john.doe@example.com\nPhone: (123) 456-7890\nSSN: 123-45-6789\nCard: 4111-1111-1111-1111"

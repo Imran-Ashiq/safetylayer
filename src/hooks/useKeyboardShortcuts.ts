@@ -14,6 +14,7 @@
 import { useEffect, useCallback } from 'react';
 import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
+import { buildSmartCopyText, notifySelectRawInput } from '@/lib/smartCopy';
 
 interface ShortcutActions {
   onScrub?: () => void;
@@ -65,9 +66,10 @@ export function useKeyboardShortcuts(customActions?: ShortcutActions) {
       if (customActions?.onCopy) {
         customActions.onCopy();
       } else if (sanitizedOutput) {
-        navigator.clipboard.writeText(sanitizedOutput);
+        navigator.clipboard.writeText(buildSmartCopyText(sanitizedOutput, { includeInstruction: true }));
+        notifySelectRawInput();
         toast({
-          title: '📋 Copied to clipboard',
+          title: '📋 Copied with AI Safety Instructions',
           description: 'Ctrl+Shift+C',
         });
       }

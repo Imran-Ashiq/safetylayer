@@ -24,6 +24,7 @@ import { DEFAULT_OPTIONS } from '@/lib/scrubber';
 import { ScrubIntensityBadge } from '@/components/ScrubIntensityToggle';
 import { haptic } from '@/lib/haptics';
 import Link from 'next/link';
+import { buildSmartCopyText, notifySelectRawInput } from '@/lib/smartCopy';
 
 export function ControlBar() {
   const { scrubText, restoreText, clearAll, sanitizedOutput, options, setOptions, rawInput, secrets } =
@@ -113,11 +114,12 @@ export function ControlBar() {
     }
 
     try {
-      await navigator.clipboard.writeText(sanitizedOutput);
+      await navigator.clipboard.writeText(buildSmartCopyText(sanitizedOutput, { includeInstruction: true }));
+      notifySelectRawInput();
       haptic('success');
       toast({
-        title: 'Copied to clipboard',
-        description: 'Sanitized text has been copied to your clipboard.',
+        title: 'Copied with AI Safety Instructions',
+        description: 'System instruction added to preserve tokens.',
       });
     } catch (error) {
       toast({

@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { HighlightedOutput } from './HighlightedOutput';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
+import { buildSmartCopyText, notifySelectRawInput, SYSTEM_INSTRUCTION } from '@/lib/smartCopy';
 import {
   Tooltip,
   TooltipContent,
@@ -33,14 +34,6 @@ import {
 } from '@/components/ui/dialog';
 
 const SMART_COPY_KEY = 'safetylayer-smart-copy-seen';
-const SYSTEM_INSTRUCTION = `[System Instruction: The text includes security placeholders such as [EMAIL_1], [PHONE_1], [CC_1], [ID_1].
-Your response must include these placeholders exactly as shown.
-Do not remove, alter, replace, summarize, or generalize them.
-If any placeholder is missing, the response is invalid.]
-
----
-
-`;
 
 export function OutputPanel() {
   const { sanitizedOutput, restoredOutput, secrets } = useScrubberStore();
@@ -72,12 +65,13 @@ export function OutputPanel() {
 
     try {
       // Only prepend system instructions for sanitized output (not restored)
-      const finalText = !isShowingRestored 
-        ? SYSTEM_INSTRUCTION + textToCopy 
+      const finalText = !isShowingRestored
+        ? buildSmartCopyText(textToCopy, { includeInstruction: true })
         : textToCopy;
 
       // Write to clipboard
       await navigator.clipboard.writeText(finalText);
+      notifySelectRawInput();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
 

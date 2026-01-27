@@ -76,8 +76,11 @@ export function PWAInstaller() {
             console.log('✅ Cleanup: No legacy SW found; preserving caches for offline use');
           }
 
-          // ✅ FRESH REGISTRATION (force-bust SW fetch)
-          const registration = await navigator.serviceWorker.register(`/worker.js?v=${Date.now()}`, {
+          // ✅ Register SW
+          // - If legacy SW was detected, force-bust the registration once
+          // - Otherwise keep a stable URL to avoid reinstalling on every app open
+          const swUrl = shouldNuke ? `/worker.js?v=${Date.now()}` : '/worker.js';
+          const registration = await navigator.serviceWorker.register(swUrl, {
             scope: '/',
             updateViaCache: 'none',
           });
@@ -88,11 +91,6 @@ export function PWAInstaller() {
 
           // Immediately check for an update
           registration.update();
-
-          // Check for updates every 60 seconds
-          setInterval(() => {
-            registration.update();
-          }, 60 * 1000);
 
           // Handle waiting service worker (new version available)
           if (registration.waiting) {
@@ -125,17 +123,12 @@ export function PWAInstaller() {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && (event.data.type === 'SW_UPDATED' || event.data.type === 'SW_ACTIVATED')) {
           console.log('🔄 SafetyLayer: SW activated with cache: ' + (event.data.cache || event.data.version));
-          // Reload to get fresh content
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
         }
       });
       
       // Refresh page when new SW takes control
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 SafetyLayer: New service worker took control, reloading...');
-        window.location.reload();
+        console.log('🔄 SafetyLayer: New service worker took control');
       });
     } else {
       console.warn('⚠️ SafetyLayer: Service Workers not supported');

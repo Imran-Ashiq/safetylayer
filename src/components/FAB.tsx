@@ -17,6 +17,7 @@ import { Wand2, Copy, Check, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScrubberStore } from '@/store/useSecretStore';
 import { useToast } from '@/hooks/use-toast';
+import { buildSmartCopyText, notifySelectRawInput } from '@/lib/smartCopy';
 
 type FABState = 'scrub' | 'copy' | 'copied' | 'restore';
 
@@ -66,11 +67,12 @@ export function FAB() {
 
       case 'copy':
         try {
-          await navigator.clipboard.writeText(sanitizedOutput);
+          await navigator.clipboard.writeText(buildSmartCopyText(sanitizedOutput, { includeInstruction: true }));
+          notifySelectRawInput();
           setFabState('copied');
           toast({
-            title: 'Copied!',
-            description: 'Sanitized text copied to clipboard',
+            title: 'Copied with AI Safety Instructions',
+            description: 'System instruction added to preserve tokens.',
           });
           if (navigator.vibrate) {
             navigator.vibrate([50, 50, 50]);
