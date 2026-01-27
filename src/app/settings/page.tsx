@@ -46,6 +46,38 @@ export default function SettingsPage() {
     });
   };
 
+  const handleClearCache = async () => {
+    try {
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      // Unregister service worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(reg => reg.unregister()));
+      }
+      
+      toast({
+        title: 'Cache cleared',
+        description: 'Reloading with fresh content...',
+      });
+      
+      // Force reload from server
+      setTimeout(() => {
+        window.location.href = window.location.href + '?cacheBust=' + Date.now();
+      }, 500);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to clear cache. Try clearing browser data manually.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleResetDefaults = () => {
     setOptions(DEFAULT_OPTIONS);
     setIntensity('standard');
@@ -267,12 +299,21 @@ export default function SettingsPage() {
               <RotateCcw className="h-4 w-4" />
               Reset All Settings to Defaults
             </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={handleClearCache}
+              className="w-full gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/20"
+            >
+              <Trash2 className="h-4 w-4" />
+              Clear App Cache & Reload
+            </Button>
           </div>
         </Card>
 
         {/* Version Info */}
         <div className="text-center text-sm text-slate-500 py-4">
-          <p>SafetyLayer v1.0.0</p>
+          <p>SafetyLayer v1.0.0 • SW: 20260127-v5</p>
           <p className="mt-1">
             <Link href="https://github.com/Imran-Ashiq/safetylayer" className="underline hover:text-slate-700">
               Open Source
